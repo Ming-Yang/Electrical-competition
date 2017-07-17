@@ -11,7 +11,7 @@ extern FIL fil;                  // file objects
 
 void SDFatFSInit();
 void SDFatFSOpen(char *);
-void SDFatFClose();
+void SDFatFsClose();
 void ParaWrite();
 void SDFatFSRead(char *);
 

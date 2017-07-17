@@ -2,6 +2,7 @@
 #include "SDFatfs.h"
 #include "OLEDUI.h"
 #include "data.h"
+
 uint16_t in_count;
 uint32_t T;
 
@@ -23,14 +24,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   UNUSED(htim);
   if(htim->Instance == htim9.Instance)
   {
-    T++;
-    if(T %100 == 0)
+    T += T_PERIOD_MS;
+    
+    if(T %500 == 0)
       HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_9);
     
+    SysCheck();
     DataInput();
-    
-    
+    DataProcess();
+    if(sys.status == RUNNING)
+      DataOutput();
 
-    DataSave();
   }       
 }

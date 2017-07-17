@@ -3,7 +3,9 @@
 #include "SDFatfs.h"
 #include "flash.h"
 #include "data.h"
+#include "interrupt.h"
 
+#define BUFF_TIME_MS 2000
 PARA_LIST_STRUCT setpara = {0};
 OLED_STRUCT oled = {0};;
 STATUS_BUTTON_STRUCT button;
@@ -33,7 +35,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 
 
 #define F_PRINTF_D(data) f_printf(&fil,"%d\t",(data))
-#define F_PRINTF_N(data) f_printf(&fil,"(data)");
+#define F_PRINTF_N(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
 {
   F_PRINTF_N(T);
@@ -105,26 +107,57 @@ void ForceParaChange()
 
 }
 
+void SysCheck()
+{
+  switch(sys.status)
+  {
+    case READY:break;
+    case RUNNING:
+      sys.T_RUN += T_PERIOD_MS;
+      if(sys.T_RUN >= setpara.set_time || sys.force_stop == 1)
+        sys.status = BLOCKED;
+    
+    
+    
+      break;
+    case BLOCKED:
+      sys.T_RUN += T_PERIOD_MS;
+      if(sys.T_RUN >= setpara.set_time + BUFF_TIME_MS)
+      {
+        sys.status = READY;
+        SDFatFsClose();
+      }
+      break;
+    case TIMEOUT:break;
+    default:break;
+  }
+}
+
 void SysRun()
 {
-  char *filename = 0;
+  char filename[5] = {0};
   uint32_t t_last = T;
   if(sys.status == READY)
   {
-    sprintf(filename,"%d",setpara.run_counts);
-    SDFatFSOpen(strcpy(filename,".txt"));
-    DataNameWriteFatfs();
-    Para2Flash();
+    __disable_irq();
+    memset(&sys,0,sizeof(SYS_STRUCT));
     
+    sys.sd_write = 1;
     setpara.run_counts++;
-    sys.T_RUN = 0;
     
-    while(T - t_last < 2000);
+    Para2Flash();
+    __enable_irq();
+    
+    sprintf(filename,"%d",setpara.run_counts);
+    SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
+    DataNameWriteFatfs();
+    
+    while(T - t_last < 1000);
     sys.status = RUNNING;
   }
   else
   {
-    printf("Run Error!\r\n");
+    printf("Not Ready!\r\n");
   }
 }
 
@@ -161,7 +194,7 @@ void CheckKey()
     }
     else
     {
-      
+      sys.force_stop = 1;
     }
     break;
   case PUSH:
@@ -230,11 +263,13 @@ void CheckKey()
     }
     else if(T-pushtime<2000)
     {
-      char *filename = 0;
-      sprintf(filename,"%d",setpara.run_counts);
-      __disable_irq();
-      SDFatFSRead(strcpy(filename,".txt"));
-      __enable_irq();
+      if(sys.status == READY)
+      {
+        char filename[5] = {0};
+        sprintf(filename,"%d",setpara.run_counts);
+        SDFatFSRead(strcat(filename,".txt"));
+        delay_ms(5000);
+      }
     }
     else
     {

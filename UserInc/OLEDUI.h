@@ -9,13 +9,32 @@
 #define PUSH_IN         PAin(10)
 #define PRESS_IN        PAin(10)
 
+typedef struct 
+{
+  int32_t run_counts;
+  int32_t set_time;
+  struct
+  {
+    int32_t mid;
+    int32_t max;
+  }steer;
+}PARA_LIST_STRUCT;
+
 typedef enum 
 {
   READY=0,
-  RUNNING,                
+  RUNNING,
   BLOCKED,
   TIMEOUT
-}SYS_STATUS_STRUCT; 
+}SYS_STATUS_STRUCT;
+
+typedef struct 
+{
+  SYS_STATUS_STRUCT status;
+  uint32_t T_RUN;
+  uint8_t sd_write;
+  uint8_t force_stop;
+}SYS_STRUCT; 
 
 typedef enum
 {
@@ -27,12 +46,6 @@ typedef enum
   DOWN,
   PUSH
 }STATUS_BUTTON_STRUCT; 
-
-typedef struct 
-{
-  SYS_STATUS_STRUCT status;
-  uint32_t T_RUN;
-}SYS_STRUCT;
 
 typedef struct 
 {
@@ -59,21 +72,10 @@ typedef struct
   uint16_t precision;
 }OLED_STRUCT;
 
-typedef struct 
-{
-  int32_t run_counts;
-  int32_t set_time;
-  struct
-  {
-    int32_t mid;
-    int32_t max;
-  }steer;
-}PARA_LIST_STRUCT;
-
-
 extern PARA_LIST_STRUCT setpara;
 extern SYS_STRUCT sys;
 
+void SysCheck();
 void OledShow();
 void CheckKey();
 void DataWriteFatfs();

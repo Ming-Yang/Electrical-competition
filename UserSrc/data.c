@@ -30,6 +30,7 @@ void DataSave()
 {
   SendOscilloscope();
   
-  DataWriteFatfs();
-  
+  if(sys.sd_write)
+    DataWriteFatfs();
+
 }
