@@ -1,8 +1,9 @@
 #include "userinc.h"
 #include "usart.h"
 
-uint8_t uart1_buff[1];
-uint8_t uart2_buff[1];
+uint8_t uart1_rx_buff[UART_BUFF_SIZE];
+uint8_t uart2_rx_buff[UART_BUFF_SIZE];
+
 
 u32 systick_getus()
 {

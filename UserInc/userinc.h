@@ -142,8 +142,12 @@ extern void PwmChangeDuty(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t Du
 
 
 /***用户变量声明***/
-extern uint8_t uart1_buff[1];
-extern uint8_t uart2_buff[1];
+#define UART_BUFF_SIZE 100
+extern uint8_t uart1_rx_buff[UART_BUFF_SIZE];
+extern uint8_t uart2_rx_buff[UART_BUFF_SIZE];
+
+
+
 extern uint32_t T;
 #endif /*__ userinc_H */
 

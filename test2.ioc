@@ -96,6 +96,7 @@ NVIC.TIM1_BRK_TIM9_IRQn=true\:0\:0\:false\:false\:true
 NVIC.TIM2_IRQn=true\:1\:0\:true\:false\:true
 NVIC.TIM3_IRQn=true\:1\:0\:true\:false\:true
 NVIC.TIM4_IRQn=true\:1\:0\:true\:false\:true
+NVIC.USART1_IRQn=true\:0\:0\:false\:false\:true
 NVIC.UsageFault_IRQn=true\:0\:0\:false\:false\:true
 PA10.Mode=Asynchronous
 PA10.Signal=USART1_RX

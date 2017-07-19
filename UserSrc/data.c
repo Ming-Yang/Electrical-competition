@@ -28,7 +28,7 @@ void DataOutput()
 
 void DataSave()
 {
-  SendOscilloscope();
+//  SendOscilloscope();
   
   if(sys.sd_write)
     DataWriteFatfs();

@@ -39,19 +39,21 @@ void TimInit()
 void UartInit()
 {
 #if UART_IT1
-  HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_buff, 1);
+  __HAL_UART_ENABLE_IT(&huart1,UART_IT_RXNE);
+  __HAL_UART_ENABLE_IT(&huart1,UART_IT_TC);
+  HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 1);
 #endif
 }
 
 void InitAll()
 {
-  __disable_irq();
+//  __disable_irq();
   TimInit();
   UartInit();
   PwmInit();
   
   printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
-  
+   
   SDFatFSInit();
   FlashInit();
   
