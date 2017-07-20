@@ -1338,10 +1338,16 @@
       <name>$PROJ_DIR$\..\UserSrc\data.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\UserSrc\filter.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\UserSrc\init.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\UserSrc\interrupt.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\UserSrc\mpu6050_process.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\UserSrc\OLEDUI.c</name>

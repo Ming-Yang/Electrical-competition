@@ -1,6 +1,7 @@
 #ifndef _DATA_H
 #define _DATA_H
 #include "userinc.h"
+#include "mpu6050_process.h"
 
 typedef struct 
 {
@@ -8,6 +9,7 @@ typedef struct
 }DATA_IN_STRUCT;
 
 extern DATA_IN_STRUCT indata;
+extern MPU6050_EULER_STRUCT euler;
 void DataInput();
 void DataSave();
 void DataOutput();

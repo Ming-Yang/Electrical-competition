@@ -129,6 +129,7 @@ typedef __I uint8_t vuc8;   /*!< Read Only */
 /***User Include***/
 #include "usmart.h"
 #include "mpu6050.h"
+#include "mpu6050_process.h"
 /***User Include End***/
 
 /***用户函数声明***/

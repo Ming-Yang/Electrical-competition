@@ -2,7 +2,7 @@
 
 "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.5\arm\bin\armjlink2.dll" 
 
-"D:\MCU\lab\f4\test2\EWARM\test2\Exe\test2.out" 
+"D:\Git\test2\EWARM\test2\Exe\test2.out" 
 
 --plugin "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.5\arm\bin\armbat.dll" 
 
