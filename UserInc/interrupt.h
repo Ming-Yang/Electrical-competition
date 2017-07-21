@@ -5,6 +5,8 @@
 #include "usart.h"
 #include "tim.h"
 
+#define T_PERIOD_MS 10
+
 extern uint32_t T;
 
 

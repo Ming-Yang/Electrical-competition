@@ -1,2 +1,4 @@
-/EWARM/test2/Obj/
-
+/EWARM/test2/
+/EWARM/settings/
+/.vscode
+*.dep

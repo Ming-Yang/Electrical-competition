@@ -2,6 +2,7 @@
 #include "userinc.h"
 
 #define READ_PRINT      1
+#define ERROR_HANDLER        0
 int32_t aa = -12234500;
 
 FATFS fs;                 // Work area (file system object) for logical drive
@@ -17,7 +18,9 @@ void SDFatFSInit()
   if(retSD)
   {
     printf("mount error : %d \r\n",retSD);
+#if NO_ERROR_HANDLER
     Error_Handler();
+#endif
   }
   else
     printf("mount sucess!!! \r\n");
@@ -29,7 +32,9 @@ void SDFatFSOpen(char *filename)
   if(retSD)
   {
     printf(" open file error : %d \r\n",retSD);
+#if NO_ERROR_HANDLER
     Error_Handler();
+#endif
   }
   else
   {
@@ -38,13 +43,15 @@ void SDFatFSOpen(char *filename)
   }
 }
 
-void SDFatFClose()
+void SDFatFsClose()
 {
   retSD = f_close(&fil);
   if(retSD)
   {
     printf(" close file error : %d \r\n",retSD);
+#if NO_ERROR_HANDLER
     Error_Handler();
+#endif
   }
   else
   {
@@ -59,7 +66,9 @@ void SDFatFSRead(char *filename)
   if(retSD)
   {
     printf(" open file error : %d \r\n",retSD);
+#if NO_ERROR_HANDLER
     Error_Handler();
+#endif
   }
   else
   {

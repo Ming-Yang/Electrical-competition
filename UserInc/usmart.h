@@ -80,8 +80,8 @@ extern struct _m_usmart_dev usmart_dev;				//在usmart_config.c里面定义
 
 u8 usmart_cmd_rec(u8*str);	//识别
 void usmart_exe(void);		//执行
-void usmart_scan(void);     //扫描
-
+void usmart_scan();     //扫描
+void ExitUsmart();
 void init_usmart();
 #endif
 
