@@ -6,6 +6,9 @@
 #define ACC_CALC_TIME  3000//ms
 #define GYRO_CALC_TIME   3000000l	//us
 
+
+
+
 /*
  *   MPU6050_Filter
  *   该函数用于滤波MPU6050得到的原始数据
@@ -64,7 +67,32 @@ static float q1q1, q1q2, q1q3;
 static float q2q2, q2q3;
 static float q3q3;
 static uint8_t bFilterInit = 0;
-//static uint8_t bImuReady = 0;
+static uint8_t bImuReady = 0;
+
+/*
+ *   IMU_Init
+ *   该函数用于初始化姿态解算融合
+ *
+ *   参数：
+ *      无
+ *   返回值：
+ *      无
+ */
+#define IMU_SAMPLE_RATE 			100.0f	//1000.0f/(float)DMP_CALC_PRD
+#define IMU_FILTER_CUTOFF_FREQ	30.0f
+
+void IMU_Init(void)
+{
+                          //软解需要先校陀螺
+    bImuReady = 0;        //校准标志位，校准代码
+    //filter rate
+    LPF2pSetCutoffFreq_1(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);		//30Hz
+    LPF2pSetCutoffFreq_2(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);
+    LPF2pSetCutoffFreq_3(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);
+    LPF2pSetCutoffFreq_4(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);
+    LPF2pSetCutoffFreq_5(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);
+    LPF2pSetCutoffFreq_6(IMU_SAMPLE_RATE,IMU_FILTER_CUTOFF_FREQ);
+}
 
 //函数名：invSqrt(void)
 //描述：求平方根的倒数
