@@ -2,9 +2,10 @@
 #include "SDFatfs.h"
 #include "OLEDUI.h"
 #include "data.h"
+#include "usmart.h"
 
 uint16_t in_count;
-uint32_t T;
+volatile uint32_t T;
 
 #if UART_IT1
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

@@ -31,11 +31,17 @@ typedef struct mpu6050_euler_struct
   float yaw;
 }MPU6050_EULER_STRUCT;
 
-void MPU6050_Process(MPU6050_DATA_STRUCT* MPU6050_DATA,
+extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+
+extern void MPU6050_Process(MPU6050_DATA_STRUCT* MPU6050_DATA,
                      MPU6050_PHYSICAL_STRUCT* MPU6050_FILTED,
                      MPU6050_PHYSICAL_STRUCT* MPU6050_OFFSET,
                      MPU6050_EULER_STRUCT* MPU6050_EULER_Rad,
                      MPU6050_EULER_STRUCT* MPU6050_EULER);
+
+extern void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
+                    MPU6050_PHYSICAL_STRUCT* MPU6050_OFFSET
+                    );
   
 
 #endif /* _MPU6050_PROCESS_H_ */

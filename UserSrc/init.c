@@ -6,6 +6,8 @@
 #include "oled.h"
 #include "SDFatfs.h"
 #include "OLEDUI.h"
+#include "mpu6050.h"
+#include "mpu6050_process.h"
 
 void TimInit()
 {

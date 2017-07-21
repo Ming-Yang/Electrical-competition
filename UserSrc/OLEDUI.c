@@ -73,9 +73,9 @@ void SendOscilloscope()
 //  printf("%d,",indata.mpu6050.gyr_y);
 //  printf("%d,",indata.mpu6050.gyr_z);
   
-  printf("%d,",(int)(euler.roll *1));
-  printf("%d,",(int)(euler.pitch*1));
-  printf("%d,",(int)(euler.yaw  *1));
+  printf("%d,",(int)(outdata.euler.roll *1));
+  printf("%d,",(int)(outdata.euler.pitch*1));
+  printf("%d,",(int)(outdata.euler.yaw  *1));
   
   printf("\r");
 }
@@ -216,7 +216,7 @@ void CheckKey()
     }
     else if(T-pushtime<5000)  
     {
-      
+      InitOffset6050(&indata.mpu6050,&mpu6050_offset);
     }
     else
     {

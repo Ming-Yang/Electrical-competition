@@ -32,12 +32,14 @@
 ////////////////////////////用户配置区///////////////////////////////////////////////
 //这下面要包含所用到的函数所申明的头文件(用户自己添加)
 #include "OLEDUI.h"
+#include "mpu6050_process.h"
 //函数名列表初始化(用户自己添加)
 //用户直接在这里输入要执行的函数名及其查找串
 struct _m_usmart_nametab usmart_nametab[]=
 {
-  (void*)init_usmart,					(uint8_t*)"void init_usmart()",
-  (void*)Para2Flash,                                      (uint8_t*)"Para2Flash()",
+  (void*)init_usmart,					        (uint8_t*)"void init_usmart()",
+  (void*)Para2Flash,                                            (uint8_t*)"Para2Flash()",
+  (void*)InitOffset6050,                                  (uint8_t*)"void InitOffset6050(MPU6050_DATA_STRUCT*,MPU6050_PHYSICAL_STRUCT*)",
 };	  							  
 ///////////////////////////////////END///////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 #include "mpu6050_process.h"
 #include "filter.h"
+#include "interrupt.h"
 
 //校准时间
 #define ACC_CALC_TIME  3000//ms
@@ -425,16 +426,38 @@ void MPU6050_Process(MPU6050_DATA_STRUCT* MPU6050_DATA,
 }
 
 
-void InitOffset6050()
+void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
+                    MPU6050_PHYSICAL_STRUCT* MPU6050_OFFSET
+                    )
 {
-  const uint32_t T_now = T;
+  static uint32_t T_now;
+  static uint32_t temp;
+  uint32_t offset_count;
+  float gyro_offsets_sum[3]={0};
+  
+  T_now = T;
+  temp = T_now;
+  
+  printf("init mpu6050 offset!\r\n");
   while(T - T_now < ACC_CALC_TIME)
   {
-  
+    if(T > temp)
+    {
+      offset_count ++;
+      gyro_offsets_sum[0] += MPU6050_DATA->gyr_x * GYRO_SCALE * M_PI_F /180.f;;
+      gyro_offsets_sum[1] += MPU6050_DATA->gyr_y * GYRO_SCALE * M_PI_F /180.f;;
+      gyro_offsets_sum[2] += MPU6050_DATA->gyr_z * GYRO_SCALE * M_PI_F /180.f;;
+    }
+    temp = T;
   }
-    
-  MPU6050_OFFSET.gyr_x = gyro_offsets_sum[0]/offset_count;
-  MPU6050_OFFSET.gyr_y = gyro_offsets_sum[1]/offset_count;
-  MPU6050_OFFSET.gyr_z = gyro_offsets_sum[2]/offset_count;
+  
+  MPU6050_OFFSET->gyr_x = gyro_offsets_sum[0]/(offset_count);
+  MPU6050_OFFSET->gyr_y = gyro_offsets_sum[1]/(offset_count);
+  MPU6050_OFFSET->gyr_z = gyro_offsets_sum[2]/(offset_count);
+  
+  printf("mpu6050 offset x:%f\r\n",MPU6050_OFFSET->gyr_x);
+  printf("mpu6050 offset y:%f\r\n",MPU6050_OFFSET->gyr_y);
+  printf("mpu6050 offset z:%f\r\n",MPU6050_OFFSET->gyr_z);
+  
   
 }

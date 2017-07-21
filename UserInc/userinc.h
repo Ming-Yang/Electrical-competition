@@ -127,9 +127,7 @@ typedef __I uint8_t vuc8;   /*!< Read Only */
 #define PIin(n)    BIT_ADDR(GPIOI_IDR_Addr,n)
 
 /***User Include***/
-#include "usmart.h"
-#include "mpu6050.h"
-#include "mpu6050_process.h"
+
 /***User Include End***/
 
 /***用户函数声明***/
@@ -149,6 +147,5 @@ extern uint8_t uart2_rx_buff[UART_BUFF_SIZE];
 
 
 
-extern uint32_t T;
 #endif /*__ userinc_H */
 
