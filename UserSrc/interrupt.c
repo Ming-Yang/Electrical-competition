@@ -44,12 +44,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(htim);
+  
   if(htim->Instance == htim9.Instance)
   {
     T += T_PERIOD_MS;
     
     if(T %500 == 0)
+    {
       HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_9);
+      printf("%d\r\n",TIM4->CNT);
+    }
     
     SysCheck();
     DataInput();

@@ -6,6 +6,6 @@ extern void InitAll();
 extern void PWMStart();
 extern void PWMStop();
 
-
+extern void InputDecoder();
 
 #endif

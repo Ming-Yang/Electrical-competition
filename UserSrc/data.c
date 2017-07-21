@@ -24,6 +24,7 @@ void DataProcess()
 void DataOutput()
 {
   PWMStart();
+  InputDecoder();
 }
 
 void DataNoPut()
