@@ -1,7 +1,6 @@
 #ifndef _DATA_H
 #define _DATA_H
 #include "userinc.h"
-#include "mpu6050_process.h"
 
 typedef struct 
 {

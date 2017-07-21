@@ -64,13 +64,16 @@ void DataWriteFatfs()
 
 void SendOscilloscope()
 {
-  printf("%d,",indata.mpu6050.gyr_x);
-  printf("%d,",indata.mpu6050.gyr_y);
-  printf("%d,",indata.mpu6050.gyr_z);
+//  printf("%d,",indata.mpu6050.acc_x);
+//  printf("%d,",indata.mpu6050.acc_y);
+//  printf("%d,",indata.mpu6050.acc_z);
+//  printf("%d,",indata.mpu6050.gyr_x);
+//  printf("%d,",indata.mpu6050.gyr_y);
+//  printf("%d,",indata.mpu6050.gyr_z);
   
-  printf("%d,",(int)(euler.roll*1000));
-  printf("%d,",(int)(euler.pitch*1000));
-  printf("%d,",(int)(euler.yaw*1000));
+  printf("%d,",(int)(euler.roll *1));
+  printf("%d,",(int)(euler.pitch*1));
+  printf("%d,",(int)(euler.yaw  *1));
   
   printf("\r");
 }
