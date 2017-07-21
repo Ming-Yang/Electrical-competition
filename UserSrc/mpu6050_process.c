@@ -423,3 +423,18 @@ void MPU6050_Process(MPU6050_DATA_STRUCT* MPU6050_DATA,
         MPU6050_EULER->pitch=euler[1] * 180.0f / M_PI_F;
         MPU6050_EULER->yaw=euler[2] * 180.0f / M_PI_F;
 }
+
+
+void InitOffset6050()
+{
+  const uint32_t T_now = T;
+  while(T - T_now < ACC_CALC_TIME)
+  {
+  
+  }
+    
+  MPU6050_OFFSET.gyr_x = gyro_offsets_sum[0]/offset_count;
+  MPU6050_OFFSET.gyr_y = gyro_offsets_sum[1]/offset_count;
+  MPU6050_OFFSET.gyr_z = gyro_offsets_sum[2]/offset_count;
+  
+}

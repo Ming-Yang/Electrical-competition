@@ -25,15 +25,13 @@ void DataInput()
 
 void DataProcess()
 {
-<<<<<<< HEAD
   //×ËÌ¬ÈÚºÏ
   MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &euler);
-   
-=======
+
   
   
  outdata.tim2.channel2 = T/10%100;
->>>>>>> master
+
 }
 
 void DataOutput()
