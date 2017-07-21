@@ -36,8 +36,8 @@
 //用户直接在这里输入要执行的函数名及其查找串
 struct _m_usmart_nametab usmart_nametab[]=
 {
-	(void*)init_usmart,					(uint8_t*)"void init_usmart()",
-        (void*)Para2Flash,                                      (uint8_t*)"Para2Flash()",
+  (void*)init_usmart,					(uint8_t*)"void init_usmart()",
+  (void*)Para2Flash,                                      (uint8_t*)"Para2Flash()",
 };	  							  
 ///////////////////////////////////END///////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -46,20 +46,29 @@ struct _m_usmart_nametab usmart_nametab[]=
 //得到函数总数量
 struct _m_usmart_dev usmart_dev=
 {
-	usmart_nametab,
-	usmart_cmd_rec,
-	usmart_exe,
-	usmart_scan,
-	(sizeof(usmart_nametab)/sizeof(struct _m_usmart_nametab)),//函数数量
-	0,	  	//参数数量
-	0,	 	//函数ID
-	0,		//默认为数据,1时为字符串
-	0,		//参数长度表
-	0,	  	//函数参数表
-	0,		//默认10进制参量
+  usmart_nametab,
+  usmart_cmd_rec,
+  usmart_exe,
+  usmart_scan,
+  (sizeof(usmart_nametab)/sizeof(struct _m_usmart_nametab)),//函数数量
+  0,	  	//参数数量
+  0,	 	//函数ID
+  0,		//默认为数据,1时为字符串
+  0,		//参数长度表
+  0,	  	//函数参数表
+  0,		//默认10进制参量
 };	   
+
+void ExitUsmart()
+{
+  if(sys.osc_suspend)
+  {
+    sys.osc_suspend = 0;
+    printf("exit!\r\n\n");
+  }
+}
 
 void init_usmart()
 {
-	printf("USMART OK!\n");
+  printf("USMART OK!\n");
 }

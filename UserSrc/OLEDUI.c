@@ -14,7 +14,7 @@ SYS_STRUCT sys;
 uint8_t f_sd_num;
 
 void ShowUnder();
-
+//parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
   &setpara.set_time,
@@ -23,7 +23,7 @@ int32_t* para_table[MAX_PARA_SIZE]={
   
   {0}
 };
-
+//parameters to be shown on the screen should be listed here in order
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
@@ -33,7 +33,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {0}
 };
 
-
+//data to be saved in sd card should be listed here in order
 #define F_PRINTF_D(data) f_printf(&fil,"%d\t",(data))
 #define F_PRINTF_N(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
@@ -63,7 +63,7 @@ void DataWriteFatfs()
   
   f_printf(&fil,"\n");
 }
-
+//data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
   printf("%d,",indata.mpu6050.gyr_x);
@@ -126,6 +126,7 @@ void SysCheck()
       {
         sys.status = READY;
         SDFatFsClose();
+        DataNoPut();
       }
       break;
     case TIMEOUT:break;
@@ -154,6 +155,7 @@ void SysRun()
     
     while(T - t_last < 1000);
     sys.status = RUNNING;
+    DataOutput();
   }
   else
   {

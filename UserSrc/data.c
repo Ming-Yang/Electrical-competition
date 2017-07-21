@@ -1,8 +1,10 @@
 #include "data.h"
 #include "OLEDUI.h"
 #include "SDFatfs.h"
+#include "init.h"
 
 DATA_IN_STRUCT indata;
+DATA_OUT_STRUCT outdata;
 
 void DataInput()
 {
@@ -16,19 +18,23 @@ void DataProcess()
 {
   
   
- 
+ outdata.tim2.channel2 = T/10%100;
 }
 
 void DataOutput()
 {
-  
-  
+  PWMStart();
+}
 
+void DataNoPut()
+{
+  PWMStop();
 }
 
 void DataSave()
 {
-//  SendOscilloscope();
+  if(!sys.osc_suspend)
+    SendOscilloscope();
   
   if(sys.sd_write)
     DataWriteFatfs();

@@ -374,6 +374,7 @@ u8 *sys_cmd_tab[] =
         "id",
         "hex",
         "dec",
+        "exit",
 };
 //处理系统指令
 //0,成功处理;其他,错误代码;
@@ -386,7 +387,7 @@ u8 usmart_sys_cmd_exe(u8 *str)
 
   usmart_get_cmdname(str, sfname, &i); //得到指令及指令长度
   str += i;
-  for (i = 0; i < 6; i++) //支持6个系统指令
+  for (i = 0; i < 7; i++) //支持7个系统指令
   {
     if (usmart_strcmp(sfname, sys_cmd_tab[i]))
       break;
@@ -404,6 +405,7 @@ u8 usmart_sys_cmd_exe(u8 *str)
     printf("id:   可用函数的ID列表\r\n\n");
     printf("hex:  参数16进制显示,后跟空格+数字即执行进制转换\r\n\n");
     printf("dec:  参数10进制显示,后跟空格+数字即执行进制转换\r\n\n");
+    printf("exit: 退出\r\n\n");
     printf("--------------------------ALIENTEK------------------------- \r\n");
 #else
     printf("指令失效\r\n");
@@ -469,6 +471,9 @@ u8 usmart_sys_cmd_exe(u8 *str)
     }
     else
       printf("\r\n");
+    break;
+  case 6:
+    ExitUsmart();
     break;
   default: //非法指令
     return USMART_FUNCERR;

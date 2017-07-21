@@ -32,6 +32,7 @@ typedef struct
 {
   SYS_STATUS_STRUCT status;
   uint32_t T_RUN;
+  uint8_t osc_suspend;
   uint8_t sd_write;
   uint8_t force_stop;
 }SYS_STRUCT; 
