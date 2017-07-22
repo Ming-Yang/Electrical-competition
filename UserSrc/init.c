@@ -15,6 +15,7 @@ void TimInit()
 void InputDecoder()
 {
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL);
 }
 
 void PWMStart()
