@@ -23,7 +23,7 @@
  *   ·µ»ØÖµ
  *      ÎÞ
  */
-#define SENSOR_MAX_G 8.0f		//constant g		// tobe fixed to 8g. but IMU need to  correct at the same time
+#define SENSOR_MAX_G 16.0f		//constant g		// tobe fixed to 8g. but IMU need to  correct at the same time
 #define SENSOR_MAX_W 2000.0f	//deg/s
 #define ACC_SCALE  (SENSOR_MAX_G/32768.0f)
 #define GYRO_SCALE  (SENSOR_MAX_W/32768.0f)
@@ -472,9 +472,9 @@ void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
     if(T > temp)
     {
       offset_count ++;
-      gyro_offsets_sum[0] += MPU6050_DATA->gyr_x * GYRO_SCALE * M_PI_F /180.f;;
-      gyro_offsets_sum[1] += MPU6050_DATA->gyr_y * GYRO_SCALE * M_PI_F /180.f;;
-      gyro_offsets_sum[2] += MPU6050_DATA->gyr_z * GYRO_SCALE * M_PI_F /180.f;;
+      gyro_offsets_sum[0] += MPU6050_DATA->gyr_x * GYRO_SCALE * M_PI_F /180.f;
+      gyro_offsets_sum[1] += MPU6050_DATA->gyr_y * GYRO_SCALE * M_PI_F /180.f;
+      gyro_offsets_sum[2] += MPU6050_DATA->gyr_z * GYRO_SCALE * M_PI_F /180.f;
     }
     temp = T;
   }

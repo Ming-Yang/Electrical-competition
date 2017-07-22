@@ -66,16 +66,16 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-//  printf("%d,",indata.mpu6050.acc_x);
-//  printf("%d,",indata.mpu6050.acc_y);
-//  printf("%d,",indata.mpu6050.acc_z);
+  printf("%d,",indata.mpu6050.acc_x);
+  printf("%d,",indata.mpu6050.acc_y);
+  printf("%d,",indata.mpu6050.acc_z);
 //  printf("%d,",indata.mpu6050.gyr_x);
 //  printf("%d,",indata.mpu6050.gyr_y);
 //  printf("%d,",indata.mpu6050.gyr_z);
   
-  printf("%d,",(int)(outdata.euler.roll *1));
-  printf("%d,",(int)(outdata.euler.pitch*1));
-  printf("%d,",(int)(outdata.euler.yaw  *1));
+  printf("%d,",(int)(outdata.euler.roll *100));
+  printf("%d,",(int)(outdata.euler.pitch*100));
+  printf("%d,",(int)(outdata.euler.yaw  *100));
   
   printf("\r");
 }
