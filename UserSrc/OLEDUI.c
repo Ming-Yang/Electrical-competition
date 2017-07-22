@@ -70,6 +70,9 @@ void SendOscilloscope()
   printf("%d,",indata.mpu6050.gyr_y);
   printf("%d,",indata.mpu6050.gyr_z);
   
+  printf("%d,",indata.decoder1.raw);
+  printf("%d,",indata.decoder2.raw);
+  
   printf("\r");
 }
 

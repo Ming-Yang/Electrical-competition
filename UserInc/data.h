@@ -4,7 +4,16 @@
 
 typedef struct 
 {
+  int32_t raw;
+  float ang_v;
+  float line_v;
+}DECODER_STRUCT;
+
+typedef struct 
+{
   MPU6050_DATA_STRUCT mpu6050;
+  DECODER_STRUCT decoder1;
+  DECODER_STRUCT decoder2;
 }DATA_IN_STRUCT;
 
 typedef struct 
