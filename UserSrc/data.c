@@ -26,7 +26,7 @@ void DataProcess()
 {
   
   
- outdata.tim2.channel2 = T/10%100;
+ outdata.tim2.channel2 = 50;
 }
 
 void DataOutput()

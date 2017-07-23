@@ -6,7 +6,6 @@
 uint16_t in_count;
 uint32_t T;
 
-#if UART_IT1
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
   /* Prevent unused argument(s) compilation warning */
@@ -15,29 +14,30 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   static uint8_t count = 0;
   static uint8_t string_flag = 0;
   
-  if(buff == '\r' || buff == '\n' || buff == '\0' ||
-     count == UART_BUFF_SIZE)
+  if(huart->Instance == huart2.Instance)
   {
-    uart1_rx_buff[count] = '\0';
-    string_flag = 1;
-    if(buff == '\r')
-      usmart_scan();
-  }
-  else
-  {
-    sys.osc_suspend = 1;
-    if(string_flag == 1)
+    if(buff == '\r' || buff == '\n' || buff == '\0' ||
+       count == UART_BUFF_SIZE)
     {
-      count = 0;
-      memset(&uart1_rx_buff,0,sizeof(uart1_rx_buff));
-      string_flag = 0;
+      uart2_rx_buff[count] = '\0';
+      string_flag = 1;
+      if(buff == '\r')
+        usmart_scan();
     }
-    uart1_rx_buff[count++] = buff;
+    else
+    {
+      sys.osc_suspend = 1;
+      if(string_flag == 1)
+      {
+        count = 0;
+        memset(&uart2_rx_buff,0,sizeof(uart2_rx_buff));
+        string_flag = 0;
+      }
+      uart2_rx_buff[count++] = buff;
+    }
+    HAL_UART_Receive_IT(&huart2, (uint8_t*)&buff, 1);
   }
-  HAL_UART_Receive_IT(&huart1, (uint8_t*)&buff, 1);
 }
-
-#endif
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

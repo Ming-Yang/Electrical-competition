@@ -608,9 +608,9 @@ void usmart_scan()
   u8 sta;
   u8 len = -1;
   memset(&USART_RX_BUF,0,sizeof(USART_RX_BUF));
-  while (uart1_rx_buff[++len] != '\0') //得到此次接收到的数据长度
+  while (uart2_rx_buff[++len] != '\0') //得到此次接收到的数据长度
   {
-    USART_RX_BUF[len] = uart1_rx_buff[len];
+    USART_RX_BUF[len] = uart2_rx_buff[len];
   }
   sta = usmart_dev.cmd_rec(USART_RX_BUF); //得到函数各个信息
   if (sta == 0)

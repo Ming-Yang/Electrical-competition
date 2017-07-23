@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : USART.h
+  * File Name          : SPI.h
   * Description        : This file provides code for the configuration
-  *                      of the USART instances.
+  *                      of the SPI instances.
   ******************************************************************************
   *
   * Copyright (c) 2017 STMicroelectronics International N.V. 
@@ -42,8 +42,8 @@
   ******************************************************************************
   */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __usart_H
-#define __usart_H
+#ifndef __spi_H
+#define __spi_H
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -56,8 +56,7 @@
 
 /* USER CODE END Includes */
 
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
+extern SPI_HandleTypeDef hspi1;
 
 /* USER CODE BEGIN Private defines */
 
@@ -65,8 +64,7 @@ extern UART_HandleTypeDef huart2;
 
 extern void Error_Handler(void);
 
-void MX_USART1_UART_Init(void);
-void MX_USART2_UART_Init(void);
+void MX_SPI1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -75,7 +73,7 @@ void MX_USART2_UART_Init(void);
 #ifdef __cplusplus
 }
 #endif
-#endif /*__ usart_H */
+#endif /*__ spi_H */
 
 /**
   * @}

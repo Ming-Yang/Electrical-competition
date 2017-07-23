@@ -27,22 +27,21 @@ void PWMStart()
 
 void PWMStop()
 {
-  HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_1);
-  HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_2);
-  HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_3);
-  HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_4);
-  
-  HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_1);
-  HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_2);
-  HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_3);
-  HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_4);
+  HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_ALL);
+  HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_ALL);
 }
 
 void UartInit()
 {
-#if UART_IT1
-  HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 1);
-#endif
+  HAL_UART_Receive_IT(&huart2, (uint8_t*)uart2_rx_buff, 1);
+}
+
+void GpioInit()
+{
+  PEout(0) = 1;
+  PEout(2) = 1;
+  PEout(4) = 1;
+  PEout(6) = 1;
 }
 
 void InitAll()
@@ -52,7 +51,7 @@ void InitAll()
   UartInit();
   
   printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
-   
+  
   SDFatFSInit();
   FlashInit();
   
