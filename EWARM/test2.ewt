@@ -1190,6 +1190,9 @@
         <name>$PROJ_DIR$\..\Src\sdio.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\Src\spi.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\Src\stm32f4xx_hal_msp.c</name>
       </file>
       <file>
@@ -1265,6 +1268,9 @@
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c</name>
       </file>
       <file>
+        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spi.c</name>
+      </file>
+      <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</name>
       </file>
       <file>
@@ -1280,6 +1286,12 @@
   </group>
   <group>
     <name>Hardware</name>
+    <file>
+      <name>$PROJ_DIR$\..\Hardware\ANO_DT.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\Hardware\ANO_DT.h</name>
+    </file>
     <file>
       <name>$PROJ_DIR$\..\Hardware\flash.c</name>
     </file>

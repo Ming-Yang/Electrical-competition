@@ -77,8 +77,9 @@ void SendOscilloscope()
   printf("%d,",(int)(outdata.euler.pitch*100));
   printf("%d,",(int)(outdata.euler.yaw  *100));
   
-  printf("%d,",indata.decoder1.raw);
-  printf("%d,",indata.decoder2.raw);
+  printf("%d,",indata.mpu6050.acc_x);
+  printf("%d,",indata.mpu6050.acc_y);
+  printf("%d,",indata.mpu6050.acc_z);
   
   printf("\r");
 }
