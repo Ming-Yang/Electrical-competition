@@ -28,9 +28,9 @@ u8 MPU6050_Init(void)
   
   MPU6050_WriteReg(MPU6050_PWR_MGMT_1, 0x00);
   MPU6050_WriteReg(MPU6050_PWR_MGMT_2, 0x00);
-  MPU6050_WriteReg(MPU6050_CONFIG, 0x00);//低通滤波器带宽260Hz
-  MPU6050_WriteReg(MPU6050_GYRO_CONFIG, 0x18);//不自检   ±2000 °/s
-  MPU6050_WriteReg(MPU6050_ACCEL_CONFIG, 0x18);//不自检  ±16g
+  MPU6050_WriteReg(MPU6050_CONFIG, 0x04);//低通滤波器带宽5Hz
+  MPU6050_WriteReg(MPU6050_GYRO_CONFIG, 0x08);//不自检   ±500 °/s
+  MPU6050_WriteReg(MPU6050_ACCEL_CONFIG, 0x08);//不自检  ±4g
   
   return SELF_ID;
 }
