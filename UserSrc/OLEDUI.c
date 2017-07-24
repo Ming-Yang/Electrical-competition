@@ -77,6 +77,9 @@ void SendOscilloscope()
   printf("%d,",(int)(outdata.euler.pitch*100));
   printf("%d,",(int)(outdata.euler.yaw  *100));
   
+  printf("%d,",indata.decoder1.raw);
+  printf("%d,",indata.decoder2.raw);
+  
   printf("\r");
 }
 
@@ -94,6 +97,7 @@ void ShowUpper(int8 page)
   case 0:       
     oledprintf(0,0,"ACC X:%3d Y:%3d Z:%3d",indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z);
     oledprintf(1,0,"GYR X:%3d Y:%3d Z:%3d",indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z);
+    oledprintf(2,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
     break;
     
   case 1:

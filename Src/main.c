@@ -47,6 +47,7 @@
 #include "dac.h"
 #include "fatfs.h"
 #include "sdio.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -108,6 +109,8 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_FATFS_Init();
   MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
+  MX_SPI1_Init();
 
   /* USER CODE BEGIN 2 */
   

@@ -18,7 +18,7 @@ void SDFatFSInit()
   if(retSD)
   {
     printf("mount error : %d \r\n",retSD);
-#if NO_ERROR_HANDLER
+#if ERROR_HANDLER
     Error_Handler();
 #endif
   }
@@ -32,7 +32,7 @@ void SDFatFSOpen(char *filename)
   if(retSD)
   {
     printf(" open file error : %d \r\n",retSD);
-#if NO_ERROR_HANDLER
+#if ERROR_HANDLER
     Error_Handler();
 #endif
   }
@@ -49,7 +49,7 @@ void SDFatFsClose()
   if(retSD)
   {
     printf(" close file error : %d \r\n",retSD);
-#if NO_ERROR_HANDLER
+#if ERROR_HANDLER
     Error_Handler();
 #endif
   }
@@ -66,7 +66,7 @@ void SDFatFSRead(char *filename)
   if(retSD)
   {
     printf(" open file error : %d \r\n",retSD);
-#if NO_ERROR_HANDLER
+#if ERROR_HANDLER
     Error_Handler();
 #endif
   }
