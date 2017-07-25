@@ -29,7 +29,7 @@ static unsigned char I2C_Wait_Ack(void);
 static void delay_us(int num)
 {
   unsigned char i,j; 
-  for(i=0;i>num;i++)
+  for(i=0;i<num;i++)
     for(j=100;j>0;j--);
 }
 
