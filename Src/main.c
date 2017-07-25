@@ -132,11 +132,11 @@ int main(void)
 
     if(T > temp_T)
     {
-//      DataSave();
-      ANO_DT_Send_Senser(indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z,
-                         indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z,
-                         0,0,0,0
-                         );
+      DataSave();
+//      ANO_DT_Send_Senser(indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z,
+//                         indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z,
+//                         0,0,0,0
+//                         );
       temp_T = T;
     }
   }
