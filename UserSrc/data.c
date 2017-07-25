@@ -8,7 +8,7 @@
 
 DATA_IN_STRUCT indata;
 MPU6050_PHYSICAL_STRUCT mpu6050_filted;
-MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+MPU6050_PHYSICAL_STRUCT mpu6050_offset={0};
 MPU6050_EULER_STRUCT eulerRad;
 
 #include "init.h"
@@ -25,9 +25,9 @@ DATA_OUT_STRUCT outdata;
 void DataInput()
 {
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
-  TIM4->CNT = 0;
+//  TIM4->CNT = 0;
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
-  TIM8->CNT = 0;
+//  TIM8->CNT = 0;
   MPU6050_GetData(&indata.mpu6050);
 }
 
