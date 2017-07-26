@@ -96,9 +96,10 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"ACC X:%3d Y:%3d Z:%3d",indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z);
-    oledprintf(1,0,"GYR X:%3d Y:%3d Z:%3d",indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z);
-    oledprintf(2,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
+    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
+    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+    oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
     break;
     
   case 1:

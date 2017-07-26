@@ -25,21 +25,28 @@ DATA_OUT_STRUCT outdata;
 void DataInput()
 {
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
-//  TIM4->CNT = 0;
+  TIM4->CNT = 0;
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
-//  TIM8->CNT = 0;
+  TIM8->CNT = 0;
   MPU6050_GetData(&indata.mpu6050);
 }
 
 void DataProcess()
 {
   //×ËÌ¬ÈÚºÏ
+  
   MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &outdata.euler);
-
   
   
- outdata.tim2.channel2 = T/100%100;
-
+  outdata.tim2.channel1 = T/100%100;
+  outdata.tim2.channel2 = T/100%100;
+  outdata.tim2.channel3 = T/100%100;
+  outdata.tim2.channel4 = T/100%100;
+  outdata.tim3.channel1 = T/100%100;
+  outdata.tim3.channel2 = T/100%100;
+  outdata.tim3.channel3 = T/100%100;
+  outdata.tim3.channel4 = T/100%100;
+  
 }
 
 void DataOutput()
