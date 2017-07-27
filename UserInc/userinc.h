@@ -148,6 +148,6 @@ extern uint8_t uart2_rx_buff[UART_BUFF_SIZE];
 
 
 
-extern uint32_t T;
+extern volatile uint32_t T;
 #endif /*__ userinc_H */
 

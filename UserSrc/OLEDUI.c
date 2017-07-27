@@ -13,6 +13,10 @@ SYS_STATUS_STRUCT sys_status;
 SYS_STRUCT sys;
 uint8_t f_sd_num;
 
+static uint32_t pushtime;
+
+static void ChangePara(char event);
+
 void ShowUnder();
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
@@ -144,20 +148,21 @@ void SysRun()
   uint32_t t_last = T;
   if(sys.status == READY)
   {
-    __disable_irq();
+    LCD_CLS();
+    oledprintf(3,3,"...");
     memset(&sys,0,sizeof(SYS_STRUCT));
     
-    sys.sd_write = 1;
     setpara.run_counts++;
     
     Para2Flash();
-    __enable_irq();
     
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
+    sys.sd_write = 1;
     
     while(T - t_last < 1000);
+    LCD_CLS();
     sys.status = RUNNING;
     DataOutput();
   }
@@ -181,7 +186,7 @@ void SysStop()
 /****************************************************************/
 void CheckKey()
 {
-  uint32_t pushtime = T;
+  pushtime = T;
   
   if(button==PRESS||button==PUSH)
     OLED_Init();        
@@ -203,6 +208,7 @@ void CheckKey()
       sys.force_stop = 1;
     }
     break;
+    
   case PUSH:
     while(!PUSH_IN);
     if(T-pushtime<500)                              
@@ -220,6 +226,7 @@ void CheckKey()
       
     }
     break;
+    
   case UP:
     while(!UP_IN);
     if(T-pushtime<500)
@@ -247,7 +254,8 @@ void CheckKey()
     {
       ForceParaChange();
     }
-    break;  
+    break; 
+    
   case DOWN:
     while(!DOWN_IN);
     if(T-pushtime<500)
@@ -272,15 +280,45 @@ void CheckKey()
       if(sys.status == READY)
       {
         char filename[5] = {0};
+        sys.osc_suspend = 1;
         sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
-        delay_ms(5000);
       }
     }
     else
     {
       
     }
+    break;
+    
+  case CW:
+    if(oled.showpage >= 0)
+      {
+        if(oled.changepara)
+          ChangePara(1);
+        else 
+        {
+          if(oled.para_select <oled.para_num-1)
+            oled.para_select ++;
+          else
+            oled.para_select = 0;
+        }
+      }
+    break;
+
+  case CCW:
+    if(oled.showpage >= 0)
+      {
+        if(oled.changepara)
+          ChangePara(2);
+        else
+        {
+          if(oled.para_select >0)
+            oled.para_select --;
+          else
+            oled.para_select = oled.para_num-1;
+        }
+      }
     break;
   default:
     break;
@@ -315,7 +353,7 @@ void OledShow()
   }
 }
 
-void ShowUnder()
+static void ShowUnder()
 {
   int temp_para_select = oled.para_select;      
   if(temp_para_select>0)
@@ -350,7 +388,7 @@ void ShowUnder()
   }
 }
 
-void ChangePara(char event) 
+static void ChangePara(char event) 
 {    
   if(oled.showpage >= 0)
   {
@@ -371,16 +409,19 @@ void ChangePara(char event)
 void Para2Flash()
 {
   int32_t para_buff[MAX_PARA_SIZE];
+  LCD_CLS();
+  oledprintf(3,3,"Saving Flash");
   printf("flash save begin:\r\n");
-  __disable_irq();
+  
   for(int i=0;i<MAX_PARA_SIZE;i++)
   {
     para_buff[i] = *para_table[i];
   }
   
   WriteFlash(para_buff, FLASH_USER_START_ADDR_1, MAX_PARA_SIZE);
-  __enable_irq();
   printf("flash save finish!\r\n");
+  delay_ms(200);
+  LCD_CLS();
 }
 
 void UIInit()
@@ -397,6 +438,7 @@ void UIInit()
     *para_table[i] = para_buff[i];
   }
   
+  oled.precision = 1;
   oled.showpage_max = 3;
   oled.showpage_min = -2;
 }

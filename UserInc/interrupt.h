@@ -7,7 +7,7 @@
 
 #define T_PERIOD_MS 10
 
-extern uint32_t T;
+extern volatile uint32_t T;
 
 
 

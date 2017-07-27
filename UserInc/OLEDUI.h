@@ -4,10 +4,12 @@
 #define MAX_PARA_SIZE	100 
 #define MAX_SD_SIZE	50 
 
-#define DOWN_IN         PAin(10)
-#define UP_IN           PAin(10)
-#define PUSH_IN         PAin(10)
-#define PRESS_IN        PAin(10)
+#define TIME_TEST       HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_10)
+#define DOWN_IN         PBin(13)
+#define UP_IN           PBin(11)
+#define PUSH_IN         PBin(10)
+#define PRESS_IN        PBin(12)
+#define DIRECTION_IN    PBin(14)
 
 typedef struct 
 {
@@ -75,6 +77,7 @@ typedef struct
 
 extern PARA_LIST_STRUCT setpara;
 extern SYS_STRUCT sys;
+extern STATUS_BUTTON_STRUCT button;
 
 void SysCheck();
 void OledShow();
