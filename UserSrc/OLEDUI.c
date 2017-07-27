@@ -6,14 +6,19 @@
 #include "interrupt.h"
 
 #define BUFF_TIME_MS 2000
+#define LED_SYS_RUN     PEout(6)=0
+#define LED_SYS_STOP    PEout(6)=1
+
 PARA_LIST_STRUCT setpara = {0};
 OLED_STRUCT oled = {0};
 STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
 SYS_STRUCT sys;
 
+static int count;
 static void ChangePara(char event);
 static void ShowUnder();
+static void SysStop();
 
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
@@ -40,7 +45,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 #define F_PRINTF_N(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
 {
-  F_PRINTF_N(T);
+  F_PRINTF_N(sys.T_RUN);
            
   F_PRINTF_N(indata.mpu6050.acc_x);
   F_PRINTF_N(indata.mpu6050.acc_y);
@@ -50,11 +55,13 @@ void DataNameWriteFatfs()
   F_PRINTF_N(indata.mpu6050.gyr_z);
   
   f_printf(&fil,"\n");
+  
+  count = 0;
 }
 
 void DataWriteFatfs()
 {
-  F_PRINTF_D(T);
+  F_PRINTF_D(sys.T_RUN);
   
   F_PRINTF_D(indata.mpu6050.acc_x);
   F_PRINTF_D(indata.mpu6050.acc_y);
@@ -64,6 +71,8 @@ void DataWriteFatfs()
   F_PRINTF_D(indata.mpu6050.gyr_z);
   
   f_printf(&fil,"\n");
+  
+  count++;
 }
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
@@ -90,6 +99,8 @@ void ShowUpper(int8 page)
     oledprintf(0,0,"ACC X:%3d Y:%3d Z:%3d",indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z);
     oledprintf(1,0,"GYR X:%3d Y:%3d Z:%3d",indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z);
     oledprintf(2,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
+    oledprintf(3,0,"%d",count);
+    oledprintf(4,0,"No.%3d,T:%3.1f",T/1000.0);
     break;
     
   case 1:
@@ -117,19 +128,16 @@ void SysCheck()
     case READY:break;
     case RUNNING:
       sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time || sys.force_stop == 1)
+      if(sys.T_RUN >= setpara.set_time*100 || sys.force_stop == 1)
         sys.status = BLOCKED;
-    
-    
-    
+
       break;
     case BLOCKED:
       sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time + BUFF_TIME_MS)
+      if((sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS) ||
+                                              sys.force_stop == 1)
       {
-        sys.status = READY;
-        SDFatFsClose();
-        DataNoPut();
+        SysStop();
       }
       break;
     case TIMEOUT:break;
@@ -141,12 +149,10 @@ void SysRun()
 {
   char filename[5] = {0};
   uint32_t t_last = T;
+  
   if(sys.status == READY)
   {
-    LCD_CLS();
-    oledprintf(3,3,"...");
-    memset(&sys,0,sizeof(SYS_STRUCT));
-    
+    memset(&sys,0,sizeof(SYS_STRUCT)); 
     setpara.run_counts++;
     
     Para2Flash();
@@ -158,6 +164,7 @@ void SysRun()
     
     while(T - t_last < 1000);
     LCD_CLS();
+    LED_SYS_RUN;
     sys.status = RUNNING;
     DataOutput();
   }
@@ -169,8 +176,15 @@ void SysRun()
 
 void SysStop()
 {
-  if(sys.status == RUNNING)
-    sys.status = BLOCKED;
+  sys.status = READY;
+  sys.sd_write = 0;
+  SDFatFsClose();
+  DataNoPut();
+  LED_SYS_STOP;
+  char filename[5];
+          sys.osc_suspend = 1;
+        sprintf(filename,"%d",setpara.run_counts-1);
+        SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/
@@ -181,7 +195,7 @@ void SysStop()
 /****************************************************************/
 void CheckKey()
 {
-  static uint32_t pushtime = T;
+  uint32_t pushtime = T;
   
   if(button==PRESS||button==PUSH)
     OLED_Init();        
@@ -404,6 +418,7 @@ static void ChangePara(char event)
 void Para2Flash()
 {
   int32_t para_buff[MAX_PARA_SIZE];
+  
   LCD_CLS();
   oledprintf(3,3,"Saving Flash");
   printf("flash save begin:\r\n");
@@ -415,7 +430,7 @@ void Para2Flash()
   
   WriteFlash(para_buff, FLASH_USER_START_ADDR_1, MAX_PARA_SIZE);
   printf("flash save finish!\r\n");
-  delay_ms(200);
+  delay_ms(100);
   LCD_CLS();
 }
 

@@ -9,10 +9,10 @@
 extern FATFS fs;                 // Work area (file system object) for logical drive
 extern FIL fil;                  // file objects
 
-void SDFatFSInit();
-void SDFatFSOpen(char *);
-void SDFatFsClose();
-void ParaWrite();
-void SDFatFSRead(char *);
+int SDFatFSInit();
+int SDFatFSOpen(char *);
+int SDFatFsClose();
+int ParaWrite();
+int SDFatFSRead(char *);
 
 #endif

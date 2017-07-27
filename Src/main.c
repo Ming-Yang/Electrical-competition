@@ -127,10 +127,10 @@ int main(void)
   /* USER CODE BEGIN 3 */
     static uint32_t temp_T = 0;
     OledShow();
-
+    CheckKey();
+    
     if(T > temp_T)
     {
-      CheckKey();
       DataSave();
       temp_T = T;
     }
