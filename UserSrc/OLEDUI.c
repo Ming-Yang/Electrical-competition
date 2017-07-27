@@ -7,17 +7,14 @@
 
 #define BUFF_TIME_MS 2000
 PARA_LIST_STRUCT setpara = {0};
-OLED_STRUCT oled = {0};;
+OLED_STRUCT oled = {0};
 STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
 SYS_STRUCT sys;
-uint8_t f_sd_num;
-
-static uint32_t pushtime;
 
 static void ChangePara(char event);
+static void ShowUnder();
 
-void ShowUnder();
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
@@ -31,8 +28,9 @@ int32_t* para_table[MAX_PARA_SIZE]={
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
-  {&setpara.steer.mid,"DetectTime",1},
-  {&setpara.steer.max,"SteerMid",1},
+  {&setpara.steer.mid,"SteerMid",1},
+  {&setpara.steer.max,"SteerMax",1},
+  {&setpara.run_counts,"Counts",1},
   
   {0}
 };
@@ -73,9 +71,6 @@ void SendOscilloscope()
   printf("%d,",indata.mpu6050.gyr_x);
   printf("%d,",indata.mpu6050.gyr_y);
   printf("%d,",indata.mpu6050.gyr_z);
-  
-  printf("%d,",indata.decoder1.raw);
-  printf("%d,",indata.decoder2.raw);
   
   printf("\r");
 }
@@ -186,7 +181,7 @@ void SysStop()
 /****************************************************************/
 void CheckKey()
 {
-  pushtime = T;
+  static uint32_t pushtime = T;
   
   if(button==PRESS||button==PUSH)
     OLED_Init();        
