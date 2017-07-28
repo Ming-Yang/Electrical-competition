@@ -5,13 +5,12 @@
 #include "mpu6050.h"
 #include "interrupt.h"
 #include "mpu6050_process.h"
+#include "init.h"
 
 DATA_IN_STRUCT indata;
 MPU6050_PHYSICAL_STRUCT mpu6050_filted;
 MPU6050_PHYSICAL_STRUCT mpu6050_offset={0};
 MPU6050_EULER_STRUCT eulerRad;
-
-#include "init.h"
 
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
@@ -21,6 +20,7 @@ DATA_OUT_STRUCT outdata;
 #define DECODER_COUNT 10000
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                       (data_in):((data_in)-(data_th))
+#define OCS_PIN PEin(12) 
                                         
 void DataInput()
 {
@@ -62,8 +62,8 @@ void DataNoPut()
 
 void DataSave()
 {
-//  if(!sys.osc_suspend)
-//    SendOscilloscope();
+  if(!(sys.osc_suspend || OCS_PIN))
+    SendOscilloscope();
   
   if(sys.sd_write)
     DataWriteFatfs();

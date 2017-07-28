@@ -41,19 +41,23 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 
 //data to be saved in sd card should be listed here in order
 #define F_PRINTF_D(data) f_printf(&fil,"%d\t",(data))
-#define F_PRINTF_N(data) f_printf(&fil,#data"\t")
+#define F_PRINTF_S(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
 {
-  F_PRINTF_N(sys.T_RUN);
+  F_PRINTF_S(sys.T_RUN);
            
-  F_PRINTF_N(indata.mpu6050.acc_x);
-  F_PRINTF_N(indata.mpu6050.acc_y);
-  F_PRINTF_N(indata.mpu6050.acc_z);
-  F_PRINTF_N(indata.mpu6050.gyr_x);
-  F_PRINTF_N(indata.mpu6050.gyr_y);
-  F_PRINTF_N(indata.mpu6050.gyr_z);
+  F_PRINTF_S(indata.mpu6050.acc_x);
+  F_PRINTF_S(indata.mpu6050.acc_y);
+  F_PRINTF_S(indata.mpu6050.acc_z);
+  F_PRINTF_S(indata.mpu6050.gyr_x);
+  F_PRINTF_S(indata.mpu6050.gyr_y);
+  F_PRINTF_S(indata.mpu6050.gyr_z);
+           
+  F_PRINTF_S(outdata.euler.pitch);
+  F_PRINTF_S(outdata.euler.roll);
+  F_PRINTF_S(outdata.euler.yaw);
   
-  f_printf(&fil,"\n");
+  f_printf(&fil,"\r\n");
 }
 
 void DataWriteFatfs()
@@ -67,7 +71,11 @@ void DataWriteFatfs()
   F_PRINTF_D(indata.mpu6050.gyr_y);
   F_PRINTF_D(indata.mpu6050.gyr_z);
   
-  f_printf(&fil,"\n");
+  F_PRINTF_D((int)(100*outdata.euler.pitch));
+  F_PRINTF_D((int)(100*outdata.euler.roll));
+  F_PRINTF_D((int)(100*outdata.euler.yaw));
+  
+  f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
@@ -101,6 +109,7 @@ void ShowUpper(int8 page)
     oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
     oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
+    oledprintf(4,0,"T:%4.1f",T/1000.0f);
     break;
     
   case 1:

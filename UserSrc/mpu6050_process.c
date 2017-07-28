@@ -103,7 +103,7 @@ void IMU_Init(void)
     mpu6050_offset.gyr_x = para_buff[0]/100000000.0f;
     mpu6050_offset.gyr_y = para_buff[1]/100000000.0f;
     mpu6050_offset.gyr_z = para_buff[2]/100000000.0f;
-    printf("offset:%f,%f,%f",mpu6050_offset.gyr_x,mpu6050_offset.gyr_y,mpu6050_offset.gyr_z);
+    printf("offset:%f,%f,%f\r\n",mpu6050_offset.gyr_x,mpu6050_offset.gyr_y,mpu6050_offset.gyr_z);
     bImuReady = 1;
   }
   

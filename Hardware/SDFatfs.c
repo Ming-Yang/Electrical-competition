@@ -63,7 +63,7 @@ int SDFatFsClose()
     }
     else if (!retSD)
     {
-      printf(" close file success!\r\n");
+//      printf(" close file success!\r\n");
       break;
     }
   }
@@ -83,7 +83,7 @@ int SDFatFSRead(char *filename)
   }
   else
   {
-    printf(" open file success!\r\n");
+//    printf(" open file success!\r\n");
     p_file = 0;
     f_lseek(&fil, p_file);
   }
@@ -94,6 +94,7 @@ int SDFatFSRead(char *filename)
   {
     printf((char const *)rtext);
   }
+  printf("\r\nNo.%s\r\n", filename);
   __enable_irq();
 #endif
   
