@@ -15,6 +15,7 @@ STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
 SYS_STRUCT sys;
 
+static int count;
 static void ChangePara(char event);
 static void ShowUnder();
 static void SysStop();
@@ -54,6 +55,8 @@ void DataNameWriteFatfs()
   F_PRINTF_N(indata.mpu6050.gyr_z);
   
   f_printf(&fil,"\n");
+  
+  count = 0;
 }
 
 void DataWriteFatfs()
@@ -68,6 +71,8 @@ void DataWriteFatfs()
   F_PRINTF_D(indata.mpu6050.gyr_z);
   
   f_printf(&fil,"\n");
+  
+  count++;
 }
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
@@ -94,6 +99,8 @@ void ShowUpper(int8 page)
     oledprintf(0,0,"ACC X:%3d Y:%3d Z:%3d",indata.mpu6050.acc_x,indata.mpu6050.acc_y,indata.mpu6050.acc_z);
     oledprintf(1,0,"GYR X:%3d Y:%3d Z:%3d",indata.mpu6050.gyr_x,indata.mpu6050.gyr_y,indata.mpu6050.gyr_z);
     oledprintf(2,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
+    oledprintf(3,0,"%d",count);
+    oledprintf(4,0,"No.%3d,T:%3.1f",T/1000.0);
     break;
     
   case 1:
@@ -118,23 +125,47 @@ void SysCheck()
 {
   switch(sys.status)
   {
+<<<<<<< HEAD
   case READY:break;
   case RUNNING:
     sys.T_RUN += T_PERIOD_MS;
     if(sys.T_RUN >= setpara.set_time*100 || sys.force_stop == 1)
       sys.status = BLOCKED;
-
+    
+    
+    
     break;
   case BLOCKED:
     sys.T_RUN += T_PERIOD_MS;
     if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS)
-                                              sys.force_stop == 1)
     {
-        SysStop();
+      sys.status = READY;
+      sys.sd_write = 0;
+      SDFatFsClose();
+      DataNoPut();
     }
     break;
   case TIMEOUT:break;
   default:break;
+=======
+    case READY:break;
+    case RUNNING:
+      sys.T_RUN += T_PERIOD_MS;
+      if(sys.T_RUN >= setpara.set_time*100 || sys.force_stop == 1)
+        sys.status = BLOCKED;
+
+      break;
+    case BLOCKED:
+      sys.T_RUN += T_PERIOD_MS;
+      if((sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS) ||
+                                              sys.force_stop == 1)
+      {
+        SysStop();
+      }
+      break;
+    case TIMEOUT:break;
+    default:break;
+>>>>>>> 099c618
   }
 }
   
@@ -156,8 +187,11 @@ void SysRun()
     
     while(T - t_last < 1000);
     LCD_CLS();
+<<<<<<< HEAD
     sys.sd_write = 1;
+=======
     LED_SYS_RUN;
+>>>>>>> 099c618
     sys.status = RUNNING;
     DataOutput();
   }

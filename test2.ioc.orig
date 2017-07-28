@@ -115,8 +115,13 @@ NVIC.SysTick_IRQn=true\:0\:0\:false\:false\:true
 NVIC.TIM1_BRK_TIM9_IRQn=true\:3\:0\:true\:false\:true
 NVIC.TIM2_IRQn=true\:2\:0\:true\:false\:true
 NVIC.TIM3_IRQn=true\:2\:0\:true\:false\:true
+<<<<<<< HEAD
 NVIC.TIM4_IRQn=true\:2\:0\:true\:false\:true
 NVIC.TIM8_BRK_TIM12_IRQn=true\:2\:0\:true\:false\:true
+=======
+NVIC.TIM4_IRQn=true\:3\:0\:true\:false\:true
+NVIC.TIM8_BRK_TIM12_IRQn=true\:3\:0\:true\:false\:true
+>>>>>>> 099c618
 NVIC.USART1_IRQn=true\:4\:0\:true\:false\:true
 NVIC.USART2_IRQn=true\:4\:0\:true\:false\:true
 NVIC.UsageFault_IRQn=true\:0\:0\:false\:false\:true

@@ -128,7 +128,7 @@ int main(void)
     static uint32_t temp_T = 0;
     OledShow();
     CheckKey();
-    
+<<<<<<< HEAD
 
 //    if(T > temp_T)
 //    {
@@ -136,6 +136,14 @@ int main(void)
 //      DataSave();
 //      temp_T = T;
 //    }
+=======
+    
+    if(T > temp_T)
+    {
+      DataSave();
+      temp_T = T;
+    }
+>>>>>>> 099c618
   }
   /* USER CODE END 3 */
 
