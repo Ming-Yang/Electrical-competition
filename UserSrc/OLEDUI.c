@@ -121,13 +121,14 @@ void SysCheck()
   case READY:break;
   case RUNNING:
     sys.T_RUN += T_PERIOD_MS;
-    if(sys.T_RUN >= setpara.set_time*100 || sys.force_stop == 1)
+    if(sys.T_RUN >= setpara.set_time*100 || 
+                                              sys.force_stop == 1)
       sys.status = BLOCKED;
 
     break;
   case BLOCKED:
     sys.T_RUN += T_PERIOD_MS;
-    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS)
+    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS ||
                                               sys.force_stop == 1)
     {
         SysStop();
@@ -154,7 +155,7 @@ void SysRun()
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
     
-    while(T - t_last < 1000);
+    while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
     sys.sd_write = 1;
     LED_SYS_RUN;
@@ -175,8 +176,9 @@ void SysStop()
   DataNoPut();
   LED_SYS_STOP;
   char filename[5];
+  
           sys.osc_suspend = 1;
-        sprintf(filename,"%d",setpara.run_counts-1);
+        sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
 }
 

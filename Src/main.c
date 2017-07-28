@@ -115,7 +115,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   InitAll();
-  DataOutput();
   /* USER CODE END 2 */
 
   /* Infinite loop */

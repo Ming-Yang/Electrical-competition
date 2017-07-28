@@ -65,8 +65,8 @@ void InitAll()
   
   printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
   
-  SDFatFSInit();
   FlashInit();
+  SDFatFSInit();
   
   UIInit();
   sys.status = READY;

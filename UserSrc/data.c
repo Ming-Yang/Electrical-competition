@@ -26,7 +26,7 @@ void DataProcess()
 {
   
   
- outdata.tim2.channel2 = T/100%100;
+ outdata.tim2.channel2 = T/10%100;
 }
 
 void DataOutput()
@@ -42,8 +42,8 @@ void DataNoPut()
 
 void DataSave()
 {
-  if(!sys.osc_suspend)
-    SendOscilloscope();
+//  if(!sys.osc_suspend)
+//    SendOscilloscope();
   
   if(sys.sd_write)
     DataWriteFatfs();

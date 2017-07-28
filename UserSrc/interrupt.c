@@ -56,6 +56,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     SysCheck();
     DataInput();
     DataProcess();
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+    HAL_NVIC_EnableIRQ(TIM3_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
     DataSave();  
   }       
 }
@@ -66,8 +69,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   UNUSED(htim);
   uint32_t pwm;
   
-  HAL_TIM_Base_DeInit(&htim2);
-  HAL_TIM_Base_DeInit(&htim3);
+  HAL_NVIC_DisableIRQ(TIM2_IRQn);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
   
   if(htim->Instance == htim2.Instance)
     switch(htim->Channel)
@@ -96,6 +99,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
+  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
   switch(GPIO_Pin)
   {
   case GPIO_PIN_10:button = PUSH;

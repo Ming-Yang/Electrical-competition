@@ -29,41 +29,44 @@ int SDFatFSInit()
 
 int SDFatFSOpen(char *filename)
 {
-  retSD = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
-  if(retSD)
+  for(int i=0;i<5;i++)
   {
-    printf(" open file error : %d \r\n",retSD);
+    retSD = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
+    if(retSD && i == 4)
+    {
+      printf(" open file error : %d \r\n",retSD);
 #if ERROR_HANDLER
-    Error_Handler();
+      Error_Handler();
 #endif
-  }
-  else
-  {
-    printf(" open file success!\r\n");
-    retSD = f_lseek(&fil, f_size(&fil));
+    }
+    else if (!retSD)
+    {
+      printf(" open file success!\r\n");
+      retSD = f_lseek(&fil, f_size(&fil));
+      break;
+    }
   }
   return retSD;
 }
 
 int SDFatFsClose()
 {
-  while(retSD = f_close(&fil));
-//  retSD = f_close(&fil);
-//  if(retSD)
-//  {
-//    retSD = f_close(&fil);
-//    if(retSD)
-//    {
-//      printf(" close file error : %d \r\n",retSD);
-//#if ERROR_HANDLER
-//      Error_Handler();
-//#endif
-//    }
-//  }
-//  else
-//  {
-//    printf(" close file success!\r\n");
-//  }
+  for(int i=0;i<5;i++)
+  {
+    retSD = f_close(&fil);
+    if(retSD && i == 4)
+    {
+      printf(" close file error : %d \r\n",retSD);
+#if ERROR_HANDLER
+      Error_Handler();
+#endif
+    }
+    else if (!retSD)
+    {
+      printf(" close file success!\r\n");
+      break;
+    }
+  }
   return retSD;
 }
 
