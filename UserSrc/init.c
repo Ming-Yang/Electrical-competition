@@ -65,10 +65,11 @@ void InitAll()
   TimInit();
   UartInit();
   
-  printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
-  
-  SDFatFSInit();
   FlashInit();
+  SDFatFSInit();
+  
+  printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
+  IMU_Init();
   
   UIInit();
   sys.status = READY;

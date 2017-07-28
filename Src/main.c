@@ -116,7 +116,6 @@ int main(void)
   
   InitAll();
   DataOutput();
-  InitOffset6050(&indata.mpu6050,&mpu6050_offset);
   /* USER CODE END 2 */
 
   /* Infinite loop */

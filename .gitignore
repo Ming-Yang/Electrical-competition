@@ -2,3 +2,4 @@
 /EWARM/settings/
 /.vscode
 *.dep
+*.orig

@@ -25,6 +25,7 @@
 
 #define TEST_FLASH_DATA                 ((uint32_t)0x12345678)
 #define FLASH_USER_START_ADDR_1         FLASH_USER_START_ADDR
+#define FLASH_USER_START_ADDR_2         ADDR_FLASH_SECTOR_6
 
 extern HAL_StatusTypeDef FlashInit(void);
 extern void ReadFlash(int32_t* table, uint32_t Address, uint32_t lenth);

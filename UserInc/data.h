@@ -36,6 +36,8 @@ typedef struct
 
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
+extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+
 void DataInput();
 void DataSave();
 void DataOutput();

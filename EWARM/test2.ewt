@@ -1287,12 +1287,6 @@
   <group>
     <name>Hardware</name>
     <file>
-      <name>$PROJ_DIR$\..\Hardware\ANO_DT.c</name>
-    </file>
-    <file>
-      <name>$PROJ_DIR$\..\Hardware\ANO_DT.h</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\Hardware\flash.c</name>
     </file>
     <file>
