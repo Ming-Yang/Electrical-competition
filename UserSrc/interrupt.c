@@ -56,10 +56,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     SysCheck();
     DataInput();
     DataProcess();
-//    if(sys.status == RUNNING || sys.status == BLOCKED)
-//      DataOutput();
-//    else
-//      DataNoPut();    
+    DataSave();  
   }       
 }
 
@@ -96,7 +93,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
-  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
   switch(GPIO_Pin)
   {
   case GPIO_PIN_10:button = PUSH;
@@ -119,6 +115,4 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     
   default:break;
   }
-  delay_ms(50);
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }

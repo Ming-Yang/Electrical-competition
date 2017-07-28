@@ -28,7 +28,7 @@ void SDFatFSInit()
 
 void SDFatFSOpen(char *filename)
 {
-  retSD = f_open(&fil, filename, FA_OPEN_ALWAYS | FA_WRITE);
+  retSD = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
   if(retSD)
   {
     printf(" open file error : %d \r\n",retSD);

@@ -40,7 +40,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 #define F_PRINTF_N(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
 {
-  F_PRINTF_N(T);
+  F_PRINTF_N(sys.T_RUN);
            
   F_PRINTF_N(indata.mpu6050.acc_x);
   F_PRINTF_N(indata.mpu6050.acc_y);
@@ -54,7 +54,7 @@ void DataNameWriteFatfs()
 
 void DataWriteFatfs()
 {
-  F_PRINTF_D(T);
+  F_PRINTF_D(sys.T_RUN);
   
   F_PRINTF_D(indata.mpu6050.acc_x);
   F_PRINTF_D(indata.mpu6050.acc_y);
@@ -107,36 +107,37 @@ void ShowUpper(int8 page)
 
 void ForceParaChange()
 {
-
+  
 }
 
 void SysCheck()
 {
   switch(sys.status)
   {
-    case READY:break;
-    case RUNNING:
-      sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time || sys.force_stop == 1)
-        sys.status = BLOCKED;
+  case READY:break;
+  case RUNNING:
+    sys.T_RUN += T_PERIOD_MS;
+    if(sys.T_RUN >= setpara.set_time*100 || sys.force_stop == 1)
+      sys.status = BLOCKED;
     
     
     
-      break;
-    case BLOCKED:
-      sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time + BUFF_TIME_MS)
-      {
-        sys.status = READY;
-        SDFatFsClose();
-        DataNoPut();
-      }
-      break;
-    case TIMEOUT:break;
-    default:break;
+    break;
+  case BLOCKED:
+    sys.T_RUN += T_PERIOD_MS;
+    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS)
+    {
+      sys.status = READY;
+      sys.sd_write = 0;
+      SDFatFsClose();
+      DataNoPut();
+    }
+    break;
+  case TIMEOUT:break;
+  default:break;
   }
 }
-
+  
 void SysRun()
 {
   char filename[5] = {0};
@@ -154,10 +155,10 @@ void SysRun()
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
-    sys.sd_write = 1;
     
     while(T - t_last < 1000);
     LCD_CLS();
+    sys.sd_write = 1;
     sys.status = RUNNING;
     DataOutput();
   }
@@ -181,7 +182,7 @@ void SysStop()
 /****************************************************************/
 void CheckKey()
 {
-  static uint32_t pushtime = T;
+  uint32_t pushtime = T;
   
   if(button==PRESS||button==PUSH)
     OLED_Init();        
