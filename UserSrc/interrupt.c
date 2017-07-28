@@ -66,6 +66,9 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   UNUSED(htim);
   uint32_t pwm;
   
+  HAL_TIM_Base_DeInit(&htim2);
+  HAL_TIM_Base_DeInit(&htim3);
+  
   if(htim->Instance == htim2.Instance)
     switch(htim->Channel)
     {

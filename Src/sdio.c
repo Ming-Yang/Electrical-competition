@@ -104,7 +104,7 @@ void HAL_SD_MspInit(SD_HandleTypeDef* sdHandle)
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
     /* Peripheral interrupt init */
-    HAL_NVIC_SetPriority(SDIO_IRQn, 1, 0);
+    HAL_NVIC_SetPriority(SDIO_IRQn, 4, 0);
     HAL_NVIC_EnableIRQ(SDIO_IRQn);
   /* USER CODE BEGIN SDIO_MspInit 1 */
 
