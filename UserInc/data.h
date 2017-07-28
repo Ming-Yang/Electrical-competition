@@ -15,6 +15,7 @@ typedef struct
   MPU6050_DATA_STRUCT mpu6050;
   DECODER_STRUCT decoder1;
   DECODER_STRUCT decoder2;
+  int16_t adc10;
 }DATA_IN_STRUCT;
 
 typedef struct 

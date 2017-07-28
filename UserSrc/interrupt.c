@@ -57,9 +57,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     SysCheck();
     DataInput();
     DataProcess();
-    HAL_NVIC_EnableIRQ(TIM2_IRQn);
-    HAL_NVIC_EnableIRQ(TIM3_IRQn);
-    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    DataOutput();
+
     DataSave();  
   }       
 }
@@ -76,20 +75,20 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   if(htim->Instance == htim2.Instance)
     switch(htim->Channel)
     {
-    case TIM_CHANNEL_1:pwm = outdata.tim2.channel1;break;
-    case TIM_CHANNEL_2:pwm = outdata.tim2.channel2;break;
-    case TIM_CHANNEL_3:pwm = outdata.tim2.channel3;break;
-    case TIM_CHANNEL_4:pwm = outdata.tim2.channel4;break;
+    case HAL_TIM_ACTIVE_CHANNEL_1:pwm = outdata.tim2.channel1;break;
+    case HAL_TIM_ACTIVE_CHANNEL_2:pwm = outdata.tim2.channel2;break;
+    case HAL_TIM_ACTIVE_CHANNEL_3:pwm = outdata.tim2.channel3;break;
+    case HAL_TIM_ACTIVE_CHANNEL_4:pwm = outdata.tim2.channel4;break;
     default:break;
     }
   
   else if(htim->Instance == htim3.Instance)
     switch(htim->Channel)
     {
-    case TIM_CHANNEL_1:pwm = outdata.tim3.channel1;break;
-    case TIM_CHANNEL_2:pwm = outdata.tim3.channel2;break;
-    case TIM_CHANNEL_3:pwm = outdata.tim3.channel3;break;
-    case TIM_CHANNEL_4:pwm = outdata.tim3.channel4;break;
+    case HAL_TIM_ACTIVE_CHANNEL_1:pwm = outdata.tim3.channel1;break;
+    case HAL_TIM_ACTIVE_CHANNEL_2:pwm = outdata.tim3.channel2;break;
+    case HAL_TIM_ACTIVE_CHANNEL_3:pwm = outdata.tim3.channel3;break;
+    case HAL_TIM_ACTIVE_CHANNEL_4:pwm = outdata.tim3.channel4;break;
     default:break;
     }
   

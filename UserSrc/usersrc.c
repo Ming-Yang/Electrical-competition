@@ -50,10 +50,10 @@ void PwmChangeDuty(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t Duty)
 {
   switch (Channel)
   {
-  case TIM_CHANNEL_1:htim->Instance->CCR1 = Duty;break;
-  case TIM_CHANNEL_2:htim->Instance->CCR2 = Duty;break;
-  case TIM_CHANNEL_3:htim->Instance->CCR3 = Duty;break;
-  case TIM_CHANNEL_4:htim->Instance->CCR4 = Duty;break;
+  case HAL_TIM_ACTIVE_CHANNEL_1:htim->Instance->CCR1 = Duty;break;
+  case HAL_TIM_ACTIVE_CHANNEL_2:htim->Instance->CCR2 = Duty;break;
+  case HAL_TIM_ACTIVE_CHANNEL_3:htim->Instance->CCR3 = Duty;break;
+  case HAL_TIM_ACTIVE_CHANNEL_4:htim->Instance->CCR4 = Duty;break;
   default:break;
   }
 }
