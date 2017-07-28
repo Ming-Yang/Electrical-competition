@@ -20,6 +20,12 @@ typedef struct
     int32_t mid;
     int32_t max;
   }steer;
+
+  int32_t test;
+
+
+
+
 }PARA_LIST_STRUCT;
 
 typedef enum 

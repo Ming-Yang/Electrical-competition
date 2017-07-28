@@ -25,6 +25,7 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.set_time,
   &setpara.steer.mid,
   &setpara.steer.max,
+  &setpara.test,
   
   {0}
 };
@@ -35,6 +36,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.steer.mid,"SteerMid",1},
   {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
+  {&setpara.test,"Test",1},
   
   {0}
 };
@@ -109,7 +111,7 @@ void ShowUpper(int8 page)
     oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
     oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
-    oledprintf(4,0,"T:%4.1f",T/1000.0f);
+    oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
     
   case 1:
@@ -189,13 +191,12 @@ void SysStop()
   sys.status = READY;
   sys.sd_write = 0;
   SDFatFsClose();
-  DataNoPut();
   LED_SYS_STOP;
   char filename[5];
   
-          sys.osc_suspend = 1;
-        sprintf(filename,"%d",setpara.run_counts);
-        SDFatFSRead(strcat(filename,".txt"));
+  sys.osc_suspend = 1;
+  sprintf(filename,"%d",setpara.run_counts);
+  SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/

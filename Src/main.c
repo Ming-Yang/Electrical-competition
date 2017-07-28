@@ -127,7 +127,6 @@ int main(void)
 //    static uint32_t temp_T = 0;
     OledShow();
     CheckKey();
-
 //    if(T > temp_T)
 //    {
 //
