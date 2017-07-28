@@ -8,6 +8,7 @@
 #include "OLEDUI.h"
 #include "mpu6050.h"
 #include "mpu6050_process.h"
+#include "adc.h"
 
 void TimInit()
 {
@@ -39,7 +40,7 @@ void PWMStop()
   HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_2);
   HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_3);
   HAL_TIM_PWM_Stop_IT(&htim2,TIM_CHANNEL_4);
-  
+                
   HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_1);
   HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_2);
   HAL_TIM_PWM_Stop_IT(&htim3,TIM_CHANNEL_3);
@@ -63,6 +64,8 @@ void InitAll()
 {
   __disable_irq();
   TimInit();
+  PWMStart();
+  InputDecoder();
   UartInit();
   
   FlashInit();
@@ -73,6 +76,7 @@ void InitAll()
   
   UIInit();
   sys.status = READY;
+  HAL_ADC_Start(&hadc1);
   printf("init finish!\r\n");
   __enable_irq();
 }
