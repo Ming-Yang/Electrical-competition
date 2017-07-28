@@ -12,7 +12,7 @@ uint32_t byteswritten;                /* File write counts */
 uint32_t bytesread;                   /* File read counts */
 uint8_t rtext[100];                     /* File read buffers */
 
-void SDFatFSInit()
+int SDFatFSInit()
 {
   retSD = f_mount(&fs, "", 0);
   if(retSD)
@@ -24,42 +24,53 @@ void SDFatFSInit()
   }
   else
     printf("mount sucess!!! \r\n");
+  return retSD;
 }
 
-void SDFatFSOpen(char *filename)
+int SDFatFSOpen(char *filename)
 {
-  retSD = f_open(&fil, filename, FA_OPEN_ALWAYS | FA_WRITE);
-  if(retSD)
+  for(int i=0;i<5;i++)
   {
-    printf(" open file error : %d \r\n",retSD);
+    retSD = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
+    if(retSD && i == 4)
+    {
+      printf(" open file error : %d \r\n",retSD);
 #if ERROR_HANDLER
-    Error_Handler();
+      Error_Handler();
 #endif
+    }
+    else if (!retSD)
+    {
+      printf(" open file success!\r\n");
+      retSD = f_lseek(&fil, f_size(&fil));
+      break;
+    }
   }
-  else
-  {
-    printf(" open file success!\r\n");
-    retSD = f_lseek(&fil, f_size(&fil));
-  }
+  return retSD;
 }
 
-void SDFatFsClose()
+int SDFatFsClose()
 {
-  retSD = f_close(&fil);
-  if(retSD)
+  for(int i=0;i<5;i++)
   {
-    printf(" close file error : %d \r\n",retSD);
+    retSD = f_close(&fil);
+    if(retSD && i == 4)
+    {
+      printf(" close file error : %d \r\n",retSD);
 #if ERROR_HANDLER
-    Error_Handler();
+      Error_Handler();
 #endif
+    }
+    else if (!retSD)
+    {
+      printf(" close file success!\r\n");
+      break;
+    }
   }
-  else
-  {
-    printf(" close file success!\r\n");
-  }
+  return retSD;
 }
 
-void SDFatFSRead(char *filename)
+int SDFatFSRead(char *filename)
 {
   DWORD p_file;
   retSD = f_open(&fil, filename, FA_READ);
@@ -76,13 +87,16 @@ void SDFatFSRead(char *filename)
     p_file = 0;
     f_lseek(&fil, p_file);
   }
-  
+
+#if READ_PRINT
   __disable_irq();
   while (f_gets((char*)rtext, sizeof rtext, &fil)) 
   {
     printf((char const *)rtext);
   }
   __enable_irq();
+#endif
   
   retSD = f_close(&fil);
+  return retSD;
 }

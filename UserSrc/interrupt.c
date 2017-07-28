@@ -4,7 +4,6 @@
 #include "data.h"
 #include "usmart.h"
 
-uint16_t in_count;
 volatile uint32_t T;
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
@@ -58,10 +57,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     SysCheck();
     DataInput();
     DataProcess();
-//    if(sys.status == RUNNING || sys.status == BLOCKED)
-//      DataOutput();
-//    else
-//      DataNoPut();    
+    HAL_NVIC_EnableIRQ(TIM2_IRQn);
+    HAL_NVIC_EnableIRQ(TIM3_IRQn);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+    DataSave();  
   }       
 }
 
@@ -70,6 +69,9 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   /* Prevent unused argument(s) compilation warning */
   UNUSED(htim);
   uint32_t pwm;
+  
+  HAL_NVIC_DisableIRQ(TIM2_IRQn);
+  HAL_NVIC_DisableIRQ(TIM3_IRQn);
   
   if(htim->Instance == htim2.Instance)
     switch(htim->Channel)
@@ -92,4 +94,33 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
     }
   
   PwmChangeDuty(htim,htim->Channel,pwm);
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(GPIO_Pin);
+  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
+  switch(GPIO_Pin)
+  {
+  case GPIO_PIN_10:button = PUSH;
+    break;
+  case GPIO_PIN_11:button = UP;
+    break;
+  case GPIO_PIN_12:
+    if(!PRESS_IN)
+      button = PRESS;
+    break;
+  case GPIO_PIN_13:button = DOWN;
+    break;
+
+  case GPIO_PIN_15:
+    if(DIRECTION_IN)
+      button = CCW;
+    else 
+      button = CW;
+    break;
+    
+  default:break;
+  }
 }

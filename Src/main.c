@@ -115,7 +115,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   InitAll();
-  DataOutput();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -128,12 +127,14 @@ int main(void)
     static uint32_t temp_T = 0;
     OledShow();
     CheckKey();
+    
 
-    if(T > temp_T)
-    {
-      DataSave();
-      temp_T = T;
-    }
+//    if(T > temp_T)
+//    {
+//
+//      DataSave();
+//      temp_T = T;
+//    }
   }
   /* USER CODE END 3 */
 

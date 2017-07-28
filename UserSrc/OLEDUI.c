@@ -6,14 +6,19 @@
 #include "interrupt.h"
 
 #define BUFF_TIME_MS 2000
+#define LED_SYS_RUN     PEout(6)=0
+#define LED_SYS_STOP    PEout(6)=1
+
 PARA_LIST_STRUCT setpara = {0};
-OLED_STRUCT oled = {0};;
+OLED_STRUCT oled = {0};
 STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
 SYS_STRUCT sys;
-uint8_t f_sd_num;
 
-void ShowUnder();
+static void ChangePara(char event);
+static void ShowUnder();
+static void SysStop();
+
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
@@ -27,8 +32,9 @@ int32_t* para_table[MAX_PARA_SIZE]={
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
-  {&setpara.steer.mid,"DetectTime",1},
-  {&setpara.steer.max,"SteerMid",1},
+  {&setpara.steer.mid,"SteerMid",1},
+  {&setpara.steer.max,"SteerMax",1},
+  {&setpara.run_counts,"Counts",1},
   
   {0}
 };
@@ -38,7 +44,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 #define F_PRINTF_N(data) f_printf(&fil,#data"\t")
 void DataNameWriteFatfs()
 {
-  F_PRINTF_N(T);
+  F_PRINTF_N(sys.T_RUN);
            
   F_PRINTF_N(indata.mpu6050.acc_x);
   F_PRINTF_N(indata.mpu6050.acc_y);
@@ -52,7 +58,7 @@ void DataNameWriteFatfs()
 
 void DataWriteFatfs()
 {
-  F_PRINTF_D(T);
+  F_PRINTF_D(sys.T_RUN);
   
   F_PRINTF_D(indata.mpu6050.acc_x);
   F_PRINTF_D(indata.mpu6050.acc_y);
@@ -75,13 +81,8 @@ void SendOscilloscope()
   
   printf("%d,",(int)(outdata.euler.roll *100));
   printf("%d,",(int)(outdata.euler.pitch*100));
-  printf("%d,",(int)(outdata.euler.yaw  *100));
-  
-//  printf("%d,",indata.mpu6050.acc_x);
-//  printf("%d,",indata.mpu6050.acc_y);
-//  printf("%d,",indata.mpu6050.acc_z);
-  
-  printf("\r");
+  printf("%d,",(int)(outdata.euler.yaw  *100));  
+  printf("\r\n");
 }
 
 void ShowUpper(int8 page)
@@ -117,56 +118,54 @@ void ShowUpper(int8 page)
 
 void ForceParaChange()
 {
-
+  
 }
 
 void SysCheck()
 {
   switch(sys.status)
   {
-    case READY:break;
-    case RUNNING:
-      sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time || sys.force_stop == 1)
-        sys.status = BLOCKED;
-    
-    
-    
-      break;
-    case BLOCKED:
-      sys.T_RUN += T_PERIOD_MS;
-      if(sys.T_RUN >= setpara.set_time + BUFF_TIME_MS)
-      {
-        sys.status = READY;
-        SDFatFsClose();
-        DataNoPut();
-      }
-      break;
-    case TIMEOUT:break;
-    default:break;
+  case READY:break;
+  case RUNNING:
+    sys.T_RUN += T_PERIOD_MS;
+    if(sys.T_RUN >= setpara.set_time*100 || 
+                                              sys.force_stop == 1)
+      sys.status = BLOCKED;
+
+    break;
+  case BLOCKED:
+    sys.T_RUN += T_PERIOD_MS;
+    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS ||
+                                              sys.force_stop == 1)
+    {
+        SysStop();
+    }
+    break;
+  case TIMEOUT:break;
+  default:break;
   }
 }
-
+  
 void SysRun()
 {
   char filename[5] = {0};
   uint32_t t_last = T;
+  
   if(sys.status == READY)
   {
-    __disable_irq();
-    memset(&sys,0,sizeof(SYS_STRUCT));
-    
-    sys.sd_write = 1;
+    memset(&sys,0,sizeof(SYS_STRUCT)); 
     setpara.run_counts++;
     
     Para2Flash();
-    __enable_irq();
     
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
     
-    while(T - t_last < 1000);
+    while(T - t_last < BUFF_TIME_MS);
+    LCD_CLS();
+    sys.sd_write = 1;
+    LED_SYS_RUN;
     sys.status = RUNNING;
     DataOutput();
   }
@@ -178,8 +177,16 @@ void SysRun()
 
 void SysStop()
 {
-  if(sys.status == RUNNING)
-    sys.status = BLOCKED;
+  sys.status = READY;
+  sys.sd_write = 0;
+  SDFatFsClose();
+  DataNoPut();
+  LED_SYS_STOP;
+  char filename[5];
+  
+          sys.osc_suspend = 1;
+        sprintf(filename,"%d",setpara.run_counts);
+        SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/
@@ -212,6 +219,7 @@ void CheckKey()
       sys.force_stop = 1;
     }
     break;
+    
   case PUSH:
     while(!PUSH_IN);
     if(T-pushtime<500)                              
@@ -229,6 +237,7 @@ void CheckKey()
       
     }
     break;
+    
   case UP:
     while(!UP_IN);
     if(T-pushtime<500)
@@ -256,7 +265,8 @@ void CheckKey()
     {
       ForceParaChange();
     }
-    break;  
+    break; 
+    
   case DOWN:
     while(!DOWN_IN);
     if(T-pushtime<500)
@@ -281,15 +291,45 @@ void CheckKey()
       if(sys.status == READY)
       {
         char filename[5] = {0};
+        sys.osc_suspend = 1;
         sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
-        delay_ms(5000);
       }
     }
     else
     {
       
     }
+    break;
+    
+  case CW:
+    if(oled.showpage >= 0)
+      {
+        if(oled.changepara)
+          ChangePara(1);
+        else 
+        {
+          if(oled.para_select <oled.para_num-1)
+            oled.para_select ++;
+          else
+            oled.para_select = 0;
+        }
+      }
+    break;
+
+  case CCW:
+    if(oled.showpage >= 0)
+      {
+        if(oled.changepara)
+          ChangePara(2);
+        else
+        {
+          if(oled.para_select >0)
+            oled.para_select --;
+          else
+            oled.para_select = oled.para_num-1;
+        }
+      }
     break;
   default:
     break;
@@ -324,7 +364,7 @@ void OledShow()
   }
 }
 
-void ShowUnder()
+static void ShowUnder()
 {
   int temp_para_select = oled.para_select;      
   if(temp_para_select>0)
@@ -359,7 +399,7 @@ void ShowUnder()
   }
 }
 
-void ChangePara(char event) 
+static void ChangePara(char event) 
 {    
   if(oled.showpage >= 0)
   {
@@ -380,16 +420,20 @@ void ChangePara(char event)
 void Para2Flash()
 {
   int32_t para_buff[MAX_PARA_SIZE];
+  
+  LCD_CLS();
+  oledprintf(3,3,"Saving Flash");
   printf("flash save begin:\r\n");
-  __disable_irq();
+  
   for(int i=0;i<MAX_PARA_SIZE;i++)
   {
     para_buff[i] = *para_table[i];
   }
   
   WriteFlash(para_buff, FLASH_USER_START_ADDR_1, MAX_PARA_SIZE);
-  __enable_irq();
   printf("flash save finish!\r\n");
+  delay_ms(100);
+  LCD_CLS();
 }
 
 void UIInit()
@@ -406,6 +450,7 @@ void UIInit()
     *para_table[i] = para_buff[i];
   }
   
+  oled.precision = 1;
   oled.showpage_max = 3;
   oled.showpage_min = -2;
 }

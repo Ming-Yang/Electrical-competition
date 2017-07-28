@@ -62,8 +62,8 @@ void DataNoPut()
 
 void DataSave()
 {
-  if(!sys.osc_suspend)
-    SendOscilloscope();
+//  if(!sys.osc_suspend)
+//    SendOscilloscope();
   
   if(sys.sd_write)
     DataWriteFatfs();
