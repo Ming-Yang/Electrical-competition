@@ -5,6 +5,7 @@
 #include "mpu6050.h"
 #include "interrupt.h"
 #include "mpu6050_process.h"
+#include "PIDBasic.h"
 #include "init.h"
 #include "adc.h"
 
@@ -21,6 +22,7 @@ DATA_OUT_STRUCT outdata;
 #define DECODER_COUNT 10000
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
 (data_in):((data_in)-(data_th))
+#define Limit(x,b,a) (x)>(a)?(a):((x)<(b)?(b):(x))
 #define OCS_PIN PEin(12) 
 
 void DataInput()
@@ -37,10 +39,14 @@ void DataInput()
   }
 }
 
+  int pwmccc, dpwm_dt;  
+  int d2pwm_dt2;
+
 void DataProcess()
 {
   //姿态融合
   MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &outdata.euler);
+
   
   if(sys.status == READY)
   {
@@ -55,11 +61,20 @@ void DataProcess()
   }
   else
   {
+      //PID控制
+  dpwm_dt = BasicPIDCalc(2047, indata.adc10);
+//  dpwm_dt += d2pwm_dt2;
+  pwmccc += dpwm_dt;
+  pwmccc = Limit(pwmccc,0,9900);
+  printf("%d,",dpwm_dt);
+  printf("%d,",pwmccc); 
+  printf("\r\n");
     //indata.adc10;
     //  outdata.tim2.channel1 = setpara.test;//pwm1
     //  outdata.tim2.channel2 = T/100%100;//pwm2
+  //setpara.test  pwmccc/100
     outdata.tim2.channel3 = setpara.test;
-    outdata.tim2.channel4 = T/10%100;
+    outdata.tim2.channel4 = pwmccc/100;
     //  outdata.tim3.channel1 = T/100%100;
     //  outdata.tim3.channel2 = T/100%100;
     //  outdata.tim3.channel3 = T/100%100;
@@ -67,8 +82,21 @@ void DataProcess()
   }
 }
 
+
+    /****PIDtest****/  
+#include "PIDBasic.h"
+  PIDC kpid_parameter;
+
+    /****\PIDtest****/  
 void DataOutput()
-{
+{  
+      /****PIDtest****/    
+  //初始化PID控制参数
+  kpid_parameter.Kp1000 = setpara.pid_para.PID_Kp;
+  kpid_parameter.Ki1000 = setpara.pid_para.PID_Ki;
+  kpid_parameter.Kd1000 = setpara.pid_para.PID_Kd;
+  KPIDInit(&kpid_parameter);
+    /********/
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);

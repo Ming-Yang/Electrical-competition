@@ -3,6 +3,9 @@
 #include "userinc.h"
 #include "mpu6050_process.h"
 
+    /****PIDtest****/  
+ extern int pwmccc, dpwm_dt;  
+
 typedef struct 
 {
   int32_t raw;

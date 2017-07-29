@@ -26,6 +26,10 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
+  &setpara.pid_para.Gamma,
+  &setpara.pid_para.PID_Kp,
+  &setpara.pid_para.PID_Ki,
+  &setpara.pid_para.PID_Kd,
   
   {0}
 };
@@ -33,10 +37,14 @@ int32_t* para_table[MAX_PARA_SIZE]={
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
-  {&setpara.steer.mid,"SteerMid",1},
-  {&setpara.steer.max,"SteerMax",1},
+//  {&setpara.steer.mid,"SteerMid",1},
+//  {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
+  {&setpara.pid_para.Gamma,"Gama", 1},
+  {&setpara.pid_para.PID_Kp,"Kp",1},
+  {&setpara.pid_para.PID_Ki,"Ki",1},
+  {&setpara.pid_para.PID_Kd,"Kd",1},
   
   {0}
 };
@@ -82,17 +90,17 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",indata.mpu6050.acc_x);
-  printf("%d,",indata.mpu6050.acc_y);
-  printf("%d,",indata.mpu6050.acc_z);
-  printf("%d,",indata.mpu6050.gyr_x);
-  printf("%d,",indata.mpu6050.gyr_y);
-  printf("%d,",indata.mpu6050.gyr_z);
-  
-  printf("%d,",(int)(outdata.euler.roll *100));
-  printf("%d,",(int)(outdata.euler.pitch*100));
-  printf("%d,",(int)(outdata.euler.yaw  *100));  
-  printf("\r\n");
+//  printf("%d,",indata.mpu6050.acc_x);
+//  printf("%d,",indata.mpu6050.acc_y);
+//  printf("%d,",indata.mpu6050.acc_z);
+//  printf("%d,",indata.mpu6050.gyr_x);
+//  printf("%d,",indata.mpu6050.gyr_y);
+//  printf("%d,",indata.mpu6050.gyr_z);
+//  
+//  printf("%d,",(int)(outdata.euler.roll *100));
+//  printf("%d,",(int)(outdata.euler.pitch*100));
+//  printf("%d,",(int)(outdata.euler.yaw  *100));  
+//  printf("\r\n");
 }
 
 void ShowUpper(int8 page)
@@ -156,7 +164,12 @@ void SysCheck()
   default:break;
   }
 }
-  
+    /****PIDtest****/  
+#include "PIDBasic.h"
+  PIDC pid_parameter;
+    /****\PIDtest****/  
+
+
 void SysRun()
 {
   char filename[5] = {0};
@@ -172,6 +185,21 @@ void SysRun()
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
+    
+    /****PIDtest****/        
+  pid_parameter.Gamma1000 = setpara.pid_para.Gamma;
+  pid_parameter.Kp1000 =    setpara.pid_para.PID_Kp;
+  pid_parameter.Ki1000 =    setpara.pid_para.PID_Ki;
+  pid_parameter.Kd1000 =    setpara.pid_para.PID_Kd;
+  pid_parameter.Delta1000 = 1;
+  pid_parameter.Threshold = 2000;
+  pid_parameter.ErrLimit  = 5000;
+  pid_parameter.DeathZone = 10;
+      BasicPIDInit(&pid_parameter);
+  pwmccc = 0;
+  dpwm_dt= 0;
+  //初始化结束
+    /********/
     
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
@@ -192,11 +220,11 @@ void SysStop()
   sys.sd_write = 0;
   SDFatFsClose();
   LED_SYS_STOP;
-  char filename[5];
-  
-  sys.osc_suspend = 1;
-  sprintf(filename,"%d",setpara.run_counts);
-  SDFatFSRead(strcat(filename,".txt"));
+//  char filename[5];
+//  
+//  sys.osc_suspend = 1;
+//  sprintf(filename,"%d",setpara.run_counts);
+//  SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/

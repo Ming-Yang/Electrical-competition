@@ -22,8 +22,12 @@ typedef struct
   }steer;
 
   int32_t test;
-
-
+  struct{
+  int32_t PID_Kp;
+  int32_t PID_Ki;
+  int32_t PID_Kd;
+  int32_t Gamma;
+  }pid_para;
 
 
 }PARA_LIST_STRUCT;
