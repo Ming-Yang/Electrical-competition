@@ -20,10 +20,10 @@ int LocPIDCalc(int set_point, int next_point);//increase pid calaulate
 
 #define LowPass 0                   //低通滤波
 #define IntegrationSaturation 0     //积分抗饱和
-#define IntegrationSeparation 1     //积分分离
-#define BANGBANG 0                  //棒棒控制
+#define IntegrationSeparation 0     //积分分离
+#define BANGBANG 1                  //棒棒控制
 #define DeadZone 1                  //死区
-#define DifferentialAdvance 0       //微分先行
+#define DifferentialAdvance 1       //微分先行
 void BasicPIDInit(PIDC* pidc);
 int BasicPIDCalc(int set_point, int next_point);//基本PID算法
 

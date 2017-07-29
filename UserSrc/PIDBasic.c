@@ -119,15 +119,8 @@ int BasicPIDCalc(int set_point, int next_point)
 {
     int ierror;
     float dcontrol, icontrol, beta;
-    float c1, c2, c3, temp, den;
     
-#if DifferentialAdvance
-    temp = pid.Differential / pid.Proportion;
-    den = pid.Gamma * temp + 1;
-    c1 = (den - 1)/den;
-    c2 = (temp + 1)/den;
-    c3 = temp/den;
-#endif // DifferentialAdvance
+
 
 #if LowPass
     //低通滤波对应的输入信号
@@ -135,7 +128,7 @@ int BasicPIDCalc(int set_point, int next_point)
 #endif // LowPass
     //当前误差
     ierror = set_point - next_point;
-    //存储一些参数
+    //存储部分参数
     pid.PrevSetPoint = pid.LastSetPoint;
     pid.LastSetPoint = set_point;
     pid.LastPoint = next_point;
@@ -157,27 +150,19 @@ int BasicPIDCalc(int set_point, int next_point)
 
 #if IntegrationSeparation
 #if BANGBANG
-    if (ierror>=pid.ErrUpLimit)//棒棒控制
-    {
-    pid.LastCon = icontrol;
-    pid.PrevSetPoint = pid.LastSetPoint;
-    pid.LastSetPoint = set_point;
-    pid.LastPoint = next_point;
+    if (ierror>=pid.ErrUpLimit){//棒棒控制    
+        pid.LastCon = pid.UpperBound;
         return pid.UpperBound;
     }
-    else if (ierror<=pid.ErrLowLimit)
-    {
-    pid.LastCon = icontrol;
-    pid.PrevSetPoint = pid.LastSetPoint;
-    pid.LastSetPoint = set_point;
-    pid.LastPoint = next_point;
+    else if (ierror<=pid.ErrLowLimit){
+        pid.LastCon = pid.LowerBound;
         return pid.LowerBound;
     }
 #else
     if (ierror>=pid.ErrUpLimit||ierror<=pid.ErrLowLimit)
         beta=0.0;
 #endif // BANGBANG
-    else if ((ierror>=(pid.ErrUpLimit*0.66) &&ierror<=pid.ErrUpLimit)//积分分离
+    else if ((ierror>=(pid.ErrUpLimit*0.66)&&ierror<=pid.ErrUpLimit)//积分分离
            ||(ierror<=(pid.ErrLowLimit*0.66)&&ierror>=pid.ErrLowLimit))
         beta=0.6;
     else if ((ierror>=(pid.ErrUpLimit*0.33) &&ierror<=(pid.ErrUpLimit*0.66))
@@ -196,20 +181,12 @@ int BasicPIDCalc(int set_point, int next_point)
 #else // IntegrationSeparation
         beta=1.0;
 #if BANGBANG
-    if (ierror>=pid.ErrUpLimit)//棒棒控制
-    {
-    pid.LastCon = icontrol;
-    pid.PrevSetPoint = pid.LastSetPoint;
-    pid.LastSetPoint = set_point;
-    pid.LastPoint = next_point;
+    if (ierror>=pid.ErrUpLimit){//棒棒控制    
+        pid.LastCon = pid.UpperBound;
         return pid.UpperBound;
     }
-    else if (ierror<=pid.ErrLowLimit)
-    {
-    pid.LastCon = icontrol;
-    pid.PrevSetPoint = pid.LastSetPoint;
-    pid.LastSetPoint = set_point;
-    pid.LastPoint = next_point;
+    else if (ierror<=pid.ErrLowLimit){
+        pid.LastCon = pid.LowerBound;
         return pid.LowerBound;
     }
 #endif // BANGBANG
@@ -222,7 +199,14 @@ int BasicPIDCalc(int set_point, int next_point)
 
 
     pid.SumError += ierror * alpha; //积分抗饱和
+    
 #if DifferentialAdvance
+    float c1, c2, c3, temp, den;
+    temp = pid.Differential / pid.Proportion;
+    den = pid.Gamma * temp + 1;
+    c1 = (den - 1)/den;
+    c2 = (temp + 1)/den;
+    c3 = temp/den;
     //微分先行
     dcontrol = c1 * pid.LastDifCon
              + c2 * next_point

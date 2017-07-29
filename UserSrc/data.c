@@ -65,19 +65,19 @@ void DataProcess()
   dpwm_dt = BasicPIDCalc(2047, indata.adc10);
 //  dpwm_dt += d2pwm_dt2;
   pwmccc += dpwm_dt;
-  pwmccc = Limit(pwmccc,0,9900);
+  pwmccc = Limit(pwmccc,0,8399);
   printf("%d,",dpwm_dt);
   printf("%d,",pwmccc); 
   printf("\r\n");
     //indata.adc10;
-    outdata.tim2.channel1 = 8000;
-    outdata.tim2.channel2 = 7000;
+//    outdata.tim2.channel1 = 8000;
+//    outdata.tim2.channel2 = 7000;
   //setpara.test  pwmccc/100
-    outdata.tim2.channel4 = 5000;
-    outdata.tim2.channel4 = pwmccc/100;
-    outdata.tim3.channel2 = 3000;
-    outdata.tim3.channel3 = 2000;
-    outdata.tim3.channel4 = 1000;
+    outdata.tim2.channel3 = setpara.test;
+    outdata.tim2.channel4 = pwmccc;
+//    outdata.tim3.channel2 = 3000;
+//    outdata.tim3.channel3 = 2000;
+//    outdata.tim3.channel4 = 1000;
   }
 }
 
