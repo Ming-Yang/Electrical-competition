@@ -56,14 +56,14 @@ void DataProcess()
   else
   {
     //indata.adc10;
-    //  outdata.tim2.channel1 = setpara.test;//pwm1
-    //  outdata.tim2.channel2 = T/100%100;//pwm2
-    outdata.tim2.channel3 = setpara.test;
-    outdata.tim2.channel4 = T/10%100;
-    //  outdata.tim3.channel1 = T/100%100;
-    //  outdata.tim3.channel2 = T/100%100;
-    //  outdata.tim3.channel3 = T/100%100;
-    //  outdata.tim3.channel4 = T/100%100;
+    outdata.tim2.channel1 = 8000;
+    outdata.tim2.channel2 = 7000;
+    outdata.tim2.channel3 = 6000;
+    outdata.tim2.channel4 = 5000;
+    outdata.tim3.channel1 = 4000;
+    outdata.tim3.channel2 = 3000;
+    outdata.tim3.channel3 = 2000;
+    outdata.tim3.channel4 = 1000;
   }
 }
 
