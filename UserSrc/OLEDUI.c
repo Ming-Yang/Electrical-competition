@@ -26,7 +26,6 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
-  &setpara.pid_para.Gamma,
   &setpara.pid_para.PID_Kp,
   &setpara.pid_para.PID_Ki,
   &setpara.pid_para.PID_Kd,
@@ -41,7 +40,6 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 //  {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
-  {&setpara.pid_para.Gamma,"Gama", 1},
   {&setpara.pid_para.PID_Kp,"Kp",1},
   {&setpara.pid_para.PID_Ki,"Ki",1},
   {&setpara.pid_para.PID_Kd,"Kd",1},
@@ -88,6 +86,7 @@ void DataWriteFatfs()
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
+#include "PIDBasic.h"
 void SendOscilloscope()
 {
 //  printf("%d,",indata.mpu6050.acc_x);
@@ -101,6 +100,23 @@ void SendOscilloscope()
 //  printf("%d,",(int)(outdata.euler.pitch*100));
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
+  
+
+  
+  extern PID pid_test;
+  extern int pwm_con;
+  
+  
+  printf("%d,",pid_test.current_point);
+  printf("%d,",pid_test.set_point); 
+  printf("%d,",(int)pid_test.last_con);
+  printf("%d,",(int)(pid_test.proportion  ));
+  printf("%d,",(int)(pid_test.integral    ));
+  printf("%d,",(int)(pid_test.differential));
+  printf("%d,",0);   
+  printf("%d,",pwm_con);
+  printf("%d,",pid_test.last_error);
+  printf("\r\n");
 }
 
 void ShowUpper(int8 page)
@@ -166,7 +182,8 @@ void SysCheck()
 }
     /****PIDtest****/  
 #include "PIDBasic.h"
-  PIDC pid_parameter;
+  PID pid_test;
+extern int pwm_con;
     /****\PIDtest****/  
 
 
@@ -187,16 +204,17 @@ void SysRun()
     DataNameWriteFatfs();
     
     /****PIDtest****/        
-  pid_parameter.Gamma1000 = setpara.pid_para.Gamma;
-  pid_parameter.Kp1000 =    setpara.pid_para.PID_Kp;
-  pid_parameter.Ki1000 =    setpara.pid_para.PID_Ki;
-  pid_parameter.Kd1000 =    setpara.pid_para.PID_Kd;
-  pid_parameter.Delta1000 = 1;
-  pid_parameter.Threshold = 2000;
-  pid_parameter.ErrLimit  = 5000;
-  pid_parameter.DeathZone = 10;
-      BasicPIDInit(&pid_parameter);
-  pwmccc = 0;
+  pid_test.proportion =    setpara.pid_para.PID_Kp;
+  pid_test.integral =    setpara.pid_para.PID_Ki;
+  pid_test.differential =    setpara.pid_para.PID_Kd;
+  pid_test.delta = 0.4;
+  pid_test.upper_bound = 8399;
+  pid_test.lower_bound = 0;
+  pid_test.err_up_limit  = 1000;
+  pid_test.err_low_limit  = -pid_test.err_up_limit;
+  pid_test.err_up_infinitesimal = 10;
+  pid_test.err_low_infinitesimal = - pid_test.err_up_infinitesimal;
+  pwm_con = 0;
   dpwm_dt= 0;
   //≥ı ºªØΩ· ¯
     /********/

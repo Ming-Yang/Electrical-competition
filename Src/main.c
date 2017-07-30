@@ -115,7 +115,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   InitAll();
-//  SysRun();
+  SysRun();
   /* USER CODE END 2 */
 
   /* Infinite loop */

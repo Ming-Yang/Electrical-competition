@@ -38,9 +38,13 @@ void DataInput()
     indata.adc10 = HAL_ADC_GetValue(&hadc1);
   }
 }
-
-  int pwmccc, dpwm_dt;  
+    /****PIDtest****/  
+#include "PIDBasic.h"
+  extern PID pid_test;
+  int pwm_con, dpwm_dt;  
+  int last_dpwm_dt, last_pwm_con;
   int d2pwm_dt2;
+    /****\PIDtest****/  
 
 void DataProcess()
 {
@@ -62,19 +66,15 @@ void DataProcess()
   else
   {
       //PID控制
-  dpwm_dt = BasicPIDCalc(2047, indata.adc10);
-//  dpwm_dt += d2pwm_dt2;
-  pwmccc += dpwm_dt;
-  pwmccc = Limit(pwmccc,0,8399);
-  printf("%d,",dpwm_dt);
-  printf("%d,",pwmccc); 
-  printf("\r\n");
+    pid_test.set_point = 2047;
+    pid_test.current_point = indata.adc10;
+    IncPIDCalc(&pid_test);
     //indata.adc10;
 //    outdata.tim2.channel1 = 8000;
 //    outdata.tim2.channel2 = 7000;
   //setpara.test  pwmccc/100
     outdata.tim2.channel3 = setpara.test;
-    outdata.tim2.channel4 = pwmccc;
+    outdata.tim2.channel4 = Limit(pid_test.sum_con,0,8399);
 //    outdata.tim3.channel2 = 3000;
 //    outdata.tim3.channel3 = 2000;
 //    outdata.tim3.channel4 = 1000;
@@ -82,19 +82,13 @@ void DataProcess()
 }
 
 
-    /****PIDtest****/  
-#include "PIDBasic.h"
-  PIDC kpid_parameter;
-
-    /****\PIDtest****/  
 void DataOutput()
 {  
       /****PIDtest****/    
   //初始化PID控制参数
-  kpid_parameter.Kp1000 = setpara.pid_para.PID_Kp;
-  kpid_parameter.Ki1000 = setpara.pid_para.PID_Ki;
-  kpid_parameter.Kd1000 = setpara.pid_para.PID_Kd;
-  KPIDInit(&kpid_parameter);
+  pid_test.proportion   = setpara.pid_para.PID_Kp;
+  pid_test.integral     = setpara.pid_para.PID_Ki;
+  pid_test.differential = setpara.pid_para.PID_Kd;
     /********/
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);

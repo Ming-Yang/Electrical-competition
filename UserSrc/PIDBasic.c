@@ -1,244 +1,201 @@
 #include "PIDBasic.h"
-typedef struct PIDs
+void PIDConClear(PID * pid_ptr)
 {
-    int LastSetPoint;
-    int PrevSetPoint;
-    int LastPoint;
-    float Gamma;
-    float Proportion;
-    float Integral;
-    float Differential;
-    float Delta;
-    float LastDifCon;
-    float LastCon;
-    long SumError;
-    int LastError;
-    int PrevError;
-    int ErrUpLimit;
-    int ErrUInfinitesimal;
-    int ErrDInfinitesimal;
-    int ErrLowLimit;
-    int UpperBound;
-    int LowerBound;
-}PID;
-static PID pid;
-
-void KPIDInit(PIDC* pidc)
-{
-    pid.Proportion  = (float)pidc->Kp1000/1000.0; //比例常数 Proportional Const
-    pid.Integral    = (float)pidc->Ki1000/1000.0; //积分常数 Integral Const
-    pid.Differential= (float)pidc->Kd1000/1000.0; //微分常数 Differential Const
+        pid_ptr->set_point = 0;
+        pid_ptr->last_set_point = 0;
+        pid_ptr->prev_set_point = 0;
+        pid_ptr->current_point = 0;
+        pid_ptr->last_point = 0;
+        pid_ptr->gamma = 0;
+        pid_ptr->proportion = 0;
+        pid_ptr->integral = 0;
+        pid_ptr->differential = 0;
+        pid_ptr->delta = 0;
+        pid_ptr->last_dif_con = 0;
+        pid_ptr->sum_con = 0;
+        pid_ptr->last_con = 0;
+        pid_ptr->sum_error = 0;
+        pid_ptr->last_error = 0;
+        pid_ptr->prev_error = 0;
+        pid_ptr->err_up_limit = 0;
+        pid_ptr->err_up_infinitesimal = 0;
+        pid_ptr->err_low_infinitesimal = 0;
+        pid_ptr->err_low_limit = 0;
+        pid_ptr->upper_bound  = 0;
+        pid_ptr->lower_bound  = 0;
 }
 
-void AllPIDCClear(PIDC* pidc)
+#if PIDKalmanFilter
+typedef struct KALMAN_FILTERs
 {
-    pid.LastSetPoint = 0;
-    pid.PrevSetPoint = 0;
-    pid.LastPoint = 0;
-    pid.Gamma      = 0;
-    pid.Proportion  = 0;
-    pid.Integral    = 0;
-    pid.Differential= 0;
-    pid.Delta       = 0;
-    pid.LastDifCon = 0;
-    pid.LastCon = 0;
-    pid.SumError = 0;
-    pid.LastError = 0;
-    pid.PrevError = 0;
-    pid.ErrUpLimit = 0;
-    pid.ErrUInfinitesimal = 0;
-    pid.ErrUInfinitesimal = 0;
-    pid.ErrLowLimit = 0;
-    pid.UpperBound = 0;
-    pid.LowerBound = 0;
-}
-void IncPIDinit(PIDC* pidc)
+        int init;
+        float x_last;
+        float p_last;
+        float Q;
+        float R;
+        float kg;
+        float x_mid;
+        float x_now;
+        float p_mid;
+        float p_now;
+        float resrc_data;
+}KALMAN_FILTER;
+KALMAN_FILTER kf;
+void KalmanFilter(KALMAN_FILTER* kf)
 {
-     AllPIDCClear(pidc);
-     KPIDInit(pidc);
+        kf->x_mid = kf->x_last; //x_last=x(k-1|k-1),x_mid=x(k|k-1)
+        kf->p_mid = kf->p_last + kf->Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
+        kf->kg = kf->p_mid / (kf->p_mid + kf->R); //kg为kalman filter，R为噪声
+        kf->x_now = kf->x_mid + kf->kg*(kf->resrc_data - kf->x_mid);//估计出的最优值
+        kf->p_now = (1 - kf->kg)*kf->p_mid;//最优值对应的协方差
+        kf->p_last = kf->p_now;   //更新covariance值
+        kf->x_last = kf->x_now;   //更新系统状态值
 }
+#endif //PIDKalmanFilter
 
-//increase pid calaulate
-int IncPIDCalc(int set_point, int next_point)
+void IncPIDCalc(PID * pid_ptr)
 {
-        int ierror;
-        float const_A, const_B, const_C, incpid;
+#if PIDKalmanFilter
+        //滤波器初始化
+        if (kf.init != 1)
+        {
+          kf.x_last = pid_ptr->current_point;
+          kf.p_last = 0.02;
+          kf.Q = 20;
+          kf.R = 1;
+          kf.init = 1;
+          return;
+        }
+        //输入值滤波
+        kf.resrc_data = pid_ptr->current_point;
+        KalmanFilter(&kf);
+        pid_ptr->current_point = kf.x_now;        
+#endif //PIDKalmanFilter
+        
+        float proportion  = (float)pid_ptr->proportion  /1000.0;
+        float integral    = (float)pid_ptr->integral    /1000.0;
+        float differential= (float)pid_ptr->differential/1000.0;
         //当前误差
-        ierror  = set_point - next_point;
-        const_A = (float)(pid.Proportion + pid.Integral + pid.Differential);
-        const_B = (float)(pid.Proportion + pid.Differential * 2);
-        const_C = (float)(pid.Differential);
+        int current_error  = pid_ptr->set_point - pid_ptr->current_point;
+        float const_A = proportion  + integral + differential;
+        float const_B = proportion  + differential * 2;
+        float const_C = differential;
 
         //增量计算
-        incpid = const_A * ierror //E[k]项
-               - const_B * pid.LastError //E[k－1]项
-               + const_C * pid.PrevError; //E[k－2]项
+        float current_control = const_A * current_error //E[k]项
+                - const_B * pid_ptr->last_error //E[k－1]项
+                + const_C * pid_ptr->prev_error; //E[k－2]项
         //存储误差，用于下次计算
-        pid.PrevError = pid.LastError;
-        pid.LastError = ierror;
-        //返回增量值
-        return((int)(incpid));
-}
-//increase pid calaulate
-int LocPIDCalc(int set_point, int next_point)
-{
-    int ierror,derror;
-    ierror = set_point - next_point; //偏差
-    pid.SumError += ierror; //积分
-    derror = ierror - pid.LastError; //微分
-    pid.LastError = ierror;
-    return (int)(pid.Proportion * ierror //比例项
-         + pid.Integral   * pid.SumError //积分项
-         + pid.Differential * derror); //微分项
-
-}
-
-
-void BasicPIDInit(PIDC* pidc)
-{
-    AllPIDCClear(pidc);
-    #if DifferentialAdvance
-    pid.Gamma       = (float)pidc->Gamma1000/1000.0;//微分先行低通滤波器参数
-    #endif // DifferentialAdvance 
-
-    pid.ErrUpLimit        = pidc->ErrLimit;
-    pid.ErrUInfinitesimal = pidc->DeathZone;
-    pid.ErrDInfinitesimal =-pidc->DeathZone;
-    pid.ErrLowLimit       =-pidc->ErrLimit;
-    pid.UpperBound        = pidc->Threshold;
-    pid.LowerBound        =-pidc->Threshold;
-}
-
-
-
-
-
-//基本PID算法，融合了输入信号低通滤波、抗饱和积分、积分分离、
-//棒棒控制、死区、微分先行6种改进的控制方法，可能非常难用。
-int BasicPIDCalc(int set_point, int next_point)
-{
-    int ierror;
-    float dcontrol, icontrol, beta;
-    
-
-
-#if LowPass
-    //低通滤波对应的输入信号
-    set_point = (int)(0.1 * set_point + 0.8 * pid.LastSetPoint + 0.1 * pid.PrevSetPoint);
-#endif // LowPass
-    //当前误差
-    ierror = set_point - next_point;
-    //存储部分参数
-    pid.PrevSetPoint = pid.LastSetPoint;
-    pid.LastSetPoint = set_point;
-    pid.LastPoint = next_point;
-    pid.LastError = ierror;
-
-    int alpha;//抗饱和系数
-#if IntegrationSaturation
-    //抗饱和
-    if (pid.LastCon >= pid.UpperBound){
-        if (ierror > 0) alpha = 0;
-        else            alpha = 1;
-    }else if (pid.LastCon <= pid.LowerBound){
-        if (ierror > 0) alpha = 1;
-        else            alpha = 0;
-    }else
-#endif // IntegrationSaturation
-        alpha = 1;
-
-
-#if IntegrationSeparation
-#if BANGBANG
-    if (ierror>=pid.ErrUpLimit){//棒棒控制    
-        pid.LastCon = pid.UpperBound;
-        return pid.UpperBound;
-    }
-    else if (ierror<=pid.ErrLowLimit){
-        pid.LastCon = pid.LowerBound;
-        return pid.LowerBound;
-    }
+        pid_ptr->prev_error = pid_ptr->last_error;
+        pid_ptr->last_error = current_error;
+        //存储控制量，用于调试
+        pid_ptr->last_con = current_control;
+        
+        //累计增量值
+#if DEADZONE
+        if (current_error >= pid_ptr->err_up_infinitesimal
+          ||current_error <= pid_ptr->err_low_infinitesimal)
+          pid_ptr->sum_con += current_control;
 #else
-    if (ierror>=pid.ErrUpLimit||ierror<=pid.ErrLowLimit)
+          pid_ptr->sum_con += current_control;
+#endif //DEADZONE
+        
+#if BOUND
+        if (pid_ptr->sum_con>=pid_ptr->upper_bound)
+          pid_ptr->sum_con = pid_ptr->upper_bound;
+        else if (pid_ptr->sum_con<=pid_ptr->lower_bound)
+          pid_ptr->sum_con = pid_ptr->lower_bound;
+#endif //BOUND
+
+        return;
+}
+
+void LocPIDCalc(PID * pid_ptr)
+{
+        float proportion  = (float)pid_ptr->proportion  /1000.0;
+        float integral    = (float)pid_ptr->integral    /1000.0;
+        float differential= (float)pid_ptr->differential/1000.0;
+        
+        int current_error, diff_error;
+        current_error  = pid_ptr->set_point - pid_ptr->current_point; //偏差
+        diff_error = current_error - pid_ptr->last_error; //微分
+        pid_ptr->last_error = current_error;
+        
+#if PIDIntegrationSaturation
+         //抗饱和
+        int alpha;//抗饱和系数
+        if (pid_ptr->last_con >= pid_ptr->upper_bound)
+        {
+            if (current_error > 0) 
+              alpha = 0;
+            else            
+              alpha = 1;
+        }
+        else if (pid_ptr->last_con <= pid_ptr->lower_bound)
+        {
+            if (current_error > 0) 
+              alpha = 1;
+            else            
+              alpha = 0;
+        }
+        else
+          alpha = 1;
+        pid_ptr->sum_error += current_error * alpha; //抗饱和积分
+#else        
+        pid_ptr->sum_error += current_error; //普通积分
+#endif // IntegrationSaturation
+        
+        float int_con;        
+#if PIDIntegrationSeparation
+    float beta;
+    if (current_error>=pid_ptr->err_up_limit||current_error<=pid_ptr->err_low_limit)
         beta=0.0;
-#endif // BANGBANG
-    else if ((ierror>=(pid.ErrUpLimit*0.66)&&ierror<=pid.ErrUpLimit)//积分分离
-           ||(ierror<=(pid.ErrLowLimit*0.66)&&ierror>=pid.ErrLowLimit))
+    else if ((current_error>=(pid_ptr->err_up_limit*0.66)&&current_error<=pid_ptr->err_up_limit)//积分分离
+           ||(current_error<=(pid_ptr->err_low_limit*0.66)&&current_error>=pid_ptr->err_low_limit))
         beta=0.6;
-    else if ((ierror>=(pid.ErrUpLimit*0.33) &&ierror<=(pid.ErrUpLimit*0.66))
-           ||(ierror<=(pid.ErrLowLimit*0.33)&&ierror>=(pid.ErrLowLimit*0.66)))
+    else if ((current_error>=(pid_ptr->err_up_limit*0.33) &&current_error<=(pid_ptr->err_up_limit*0.66))
+           ||(current_error<=(pid_ptr->err_low_limit*0.33)&&current_error>=(pid_ptr->err_low_limit*0.66)))
         beta=0.9;
     else
-#if DeadZone
-        if ((ierror>=pid.ErrUInfinitesimal&&ierror<=(pid.ErrUpLimit*0.05))
-           ||(ierror<=pid.ErrDInfinitesimal&&ierror>=(pid.ErrLowLimit*0.05)))
         beta=1.0;
-    else
-        return (int)pid.LastCon;//死区不控制
-#else // DeadZone
-        beta=1.0;
-#endif // DeadZone
-#else // IntegrationSeparation
-        beta=1.0;
-#if BANGBANG
-    if (ierror>=pid.ErrUpLimit){//棒棒控制    
-        pid.LastCon = pid.UpperBound;
-        return pid.UpperBound;
-    }
-    else if (ierror<=pid.ErrLowLimit){
-        pid.LastCon = pid.LowerBound;
-        return pid.LowerBound;
-    }
-#endif // BANGBANG
-#if DeadZone
-    if (ierror<=pid.ErrUInfinitesimal&&ierror>=pid.ErrDInfinitesimal)
-        return (int)pid.LastCon;//死区不控制
-#endif // DeadZone
-#endif // IntegrationSeparation
-
-
-
-    pid.SumError += ierror * alpha; //积分抗饱和
-    
-#if DifferentialAdvance
-    float c1, c2, c3, temp, den;
-    temp = pid.Differential / pid.Proportion;
-    den = pid.Gamma * temp + 1;
-    c1 = (den - 1)/den;
-    c2 = (temp + 1)/den;
-    c3 = temp/den;
-    //微分先行
-    dcontrol = c1 * pid.LastDifCon
-             + c2 * next_point
-             - c3 * pid.LastPoint; //微分
+    int_con = integral * pid_ptr->sum_error * beta;
 #else
-    dcontrol = pid.Differential * (ierror - pid.LastError);
-#endif // DifferentialAdvance
-    icontrol = pid.Proportion * ierror //比例项
-             + pid.Integral   * pid.SumError * beta //积分分离
-             + dcontrol; //微分项
+    int_con = integral   * pid_ptr->sum_error;
+#endif //PIDIntegrationSeparation
     
-    //超过上界
-    if (icontrol > pid.UpperBound)
-      icontrol = pid.UpperBound;
-    else if (icontrol < pid.LowerBound)
-      icontrol = pid.LowerBound;
+    float dif_con;
+#if PIDPartialDifferential
+    dif_con = differential * diff_error*(1-pid_ptr->delta)
+             + pid_ptr->delta *  pid_ptr->last_dif_con; //微分
+    pid_ptr->last_dif_con = dif_con;    
+#else
+    dif_con = differential * diff_error;
+#endif // PIDPartialDifferential
+            
+                //累计增量值
+#if PIDDeadZone
+        if (current_error >= pid_ptr->err_up_infinitesimal
+          ||current_error <= pid_ptr->err_low_infinitesimal)
+          pid_ptr->sum_con+= proportion * current_error //比例项
+                           + int_con                    //积分项
+                           + differential * diff_error; //微分项
+        else
+          pid_ptr->sum_con = pid_ptr->last_con;
+#else
+        pid_ptr->sum_con+= proportion * current_error //比例项
+                         + int_con//积分项
+                         + differential * diff_error; //微分项
+#endif //DeadZone
+                
+#if PIDBound
+        if (pid_ptr->sum_con>=pid_ptr->upper_bound)
+          pid_ptr->sum_con = pid_ptr->upper_bound;
+        else if (pid_ptr->sum_con<=pid_ptr->lower_bound)
+          pid_ptr->sum_con = pid_ptr->lower_bound;
+#endif //Bound
 
-  
-    //存储下次需要用到的量
-    pid.LastDifCon = dcontrol;
-    pid.LastCon = icontrol;
         
-  printf("%d,",(int)pid.LastCon);
-  printf("%d,",pid.LastPoint);
-  printf("%d,",pid.LastSetPoint); 
-  printf("%d,",(int)(pid.Proportion  ));
-  printf("%d,",(int)(pid.Integral    ));
-  printf("%d,",(int)(pid.Differential));
-  
-  printf("%d,",pid.LastError);
-
-    return ((int)icontrol);
-
+        pid_ptr->last_con = pid_ptr->sum_con;
+        
+        return;
 }
-

@@ -26,7 +26,6 @@ typedef struct
   int32_t PID_Kp;
   int32_t PID_Ki;
   int32_t PID_Kd;
-  int32_t Gamma;
   }pid_para;
 
 
