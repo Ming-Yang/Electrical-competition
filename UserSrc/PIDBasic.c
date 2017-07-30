@@ -182,7 +182,7 @@ void LocPIDCalc(PID * pid_ptr)
         else
           pid_ptr->sum_con = pid_ptr->last_con;
 #else
-        pid_ptr->sum_con+= proportion * current_error //比例项
+        pid_ptr->sum_con = proportion * current_error //比例项
                          + int_con//积分项
                          + differential * diff_error; //微分项
 #endif //DeadZone

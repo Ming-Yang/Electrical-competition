@@ -26,7 +26,8 @@ typedef struct PIDs
     int upper_bound;
     int lower_bound;
 }PID;
-#define PIDKalmanFilter 1
+#define PIDKalmanFilter 0
+#define PIDLowPassFilter 1
 #define PIDBound 1
 #define PIDDeadZone 1
 #define PIDIntegrationSaturation 1
