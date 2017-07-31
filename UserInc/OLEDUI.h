@@ -36,6 +36,7 @@ typedef struct
   }angle_pid;
   
   int32_t test;
+  int32_t test2;
   struct{
   int32_t speed_kp;
   int32_t speed_ki;

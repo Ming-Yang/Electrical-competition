@@ -9,6 +9,8 @@
 typedef struct 
 {
   int32_t raw;
+  int32_t acc_roll;
+  uint16_t lines;
   float ang_v;
   float line_v;
 }DECODER_STRUCT;

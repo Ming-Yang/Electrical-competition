@@ -4,6 +4,11 @@
 #include "flash.h"
 #include "data.h"
 #include "interrupt.h"
+/****PIDtest****/  
+#include "PIDController.h"
+PID euler_speed ;
+PID speed_pwm;
+/****\PIDtest****/  
 
 #define BUFF_TIME_MS 2000
 #define LED_SYS_RUN     PEout(6)=0
@@ -26,6 +31,7 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
+  &setpara.test2,
   &setpara.speed_pid.kp,
   &setpara.speed_pid.ki,
   &setpara.speed_pid.kd,
@@ -49,6 +55,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
+  {&setpara.test2,"Test2",1},
   {&setpara.speed_pid.kp,"Pspeed",1},
   {&setpara.speed_pid.ki,"Ispeed",1},
   {&setpara.speed_pid.kd,"Dspeed",1},
@@ -114,23 +121,20 @@ void DataWriteFatfs()
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
-#include "PIDController.h"
-
 void SendOscilloscope()
 {
-  printf("%d,",(int)(outdata.speed*10));
-  printf("%d,",outdata.pwm);
-//  
+//  printf("%d,",(int)(outdata.speed*10));
+//  printf("%d,",outdata.pwm);
+  
 //  printf("%d,",(int)(outdata.euler.roll *100));
 //  printf("%d,",(int)(outdata.euler.pitch*100));
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
-
-  
-//  extern PID pid_test;
-//  extern int pwm_con;
+  printf("%d,",(int)(speed_pwm.set_point));
+  printf("%d,",(int)(speed_pwm.current_point));
   
   
+  printf("%d,",(int)(speed_pwm.last_set_point));
   printf("%d,",(int)(indata.decoder1.ang_v*10));
   printf("%d,",(int)(outdata.speed*10));
   printf("%d,",outdata.pwm);
@@ -229,11 +233,6 @@ void SysCheck()
   default:break;
   }
 }
-    /****PIDtest****/  
-#include "PIDController.h"
-  PID euler_speed ;
-  PID speed_pwm;
-    /****\PIDtest****/  
 
 
 void SysRun()
@@ -244,6 +243,7 @@ void SysRun()
   if(sys.status == READY)
   {
     memset(&sys,0,sizeof(SYS_STRUCT)); 
+    memset(&indata,0,sizeof(DATA_IN_STRUCT));
     setpara.run_counts++;
     
     Para2Flash();
@@ -252,7 +252,8 @@ void SysRun()
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
     
-    /****PIDtest****/        
+    /****PIDtest****/     
+  memset(&euler_speed,0,sizeof(euler_speed));
   euler_speed.proportion   =    setpara.pid_para.speed_kp;
   euler_speed.integral     =    setpara.pid_para.speed_ki;
   euler_speed.differential =    setpara.pid_para.speed_kd;
@@ -261,12 +262,13 @@ void SysRun()
   euler_speed.err_up_infinitesimal = 10;
   euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
   
+  memset(&speed_pwm,0,sizeof(speed_pwm));
   speed_pwm.proportion   =    setpara.pid_para.angle_kp;
   speed_pwm.integral     =    setpara.pid_para.angle_ki;
   speed_pwm.differential =    setpara.pid_para.angle_kd;
   speed_pwm.upper_bound = 10000;
-  speed_pwm.lower_bound = 0;
-  speed_pwm.err_up_infinitesimal = 50;
+  speed_pwm.lower_bound = -10000;
+  speed_pwm.err_up_infinitesimal = 25;
   speed_pwm.err_low_infinitesimal = - speed_pwm.err_up_infinitesimal;
   //初始化结束
     /********/
