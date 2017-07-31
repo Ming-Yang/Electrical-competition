@@ -68,7 +68,7 @@ static float q1q1, q1q2, q1q3;
 static float q2q2, q2q3;
 static float q3q3;
 static uint8_t bFilterInit = 0;
-static uint8_t bImuReady = 0;
+uint8_t bImuReady = 0;
 
 /*
 *   IMU_Init
@@ -98,11 +98,12 @@ void IMU_Init(void)
   
   ReadFlash(para_buff, FLASH_USER_START_ADDR_2, 3);
   
-  if(para_buff[0] != -1 && para_buff[1] != -1 && para_buff[2] != -1)
+  if(para_buff[0] > -100000 && para_buff[1] > -100000 && para_buff[2] > -100000 &&
+     para_buff[0] < 100000 && para_buff[1] < 100000 && para_buff[2] < 100000 )
   {
-    mpu6050_offset.gyr_x = para_buff[0]/100000000.0f;
-    mpu6050_offset.gyr_y = para_buff[1]/100000000.0f;
-    mpu6050_offset.gyr_z = para_buff[2]/100000000.0f;
+    mpu6050_offset.gyr_x = para_buff[0]/100000.0f;
+    mpu6050_offset.gyr_y = para_buff[1]/100000.0f;
+    mpu6050_offset.gyr_z = para_buff[2]/100000.0f;
     printf("offset:%f,%f,%f\r\n",mpu6050_offset.gyr_x,mpu6050_offset.gyr_y,mpu6050_offset.gyr_z);
     bImuReady = 1;
   }
@@ -475,14 +476,18 @@ void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
                     MPU6050_PHYSICAL_STRUCT* MPU6050_OFFSET
                       )
 {
+  static uint8_t flag;
   int32_t para_buff[3];
   static uint32_t offset_count = 0;
   static uint32_t T_now = 0;
   static float gyro_offsets_sum[3]={0};
   
 //  printf("init mpu6050 offset!\r\n");
-  if(T_now == 0)
+  if(flag == 0)
+  {
     T_now = T;
+    flag = 1;
+  }
   
   if(T < T_now + ACC_CALC_TIME)
   {
@@ -502,10 +507,9 @@ void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
     printf("mpu6050 offset y:%f\r\n",MPU6050_OFFSET->gyr_y);
     printf("mpu6050 offset z:%f\r\n",MPU6050_OFFSET->gyr_z);
     
-    para_buff[0] = (int32_t)(MPU6050_OFFSET->gyr_x*100000000);
-    para_buff[1] = (int32_t)(MPU6050_OFFSET->gyr_y*100000000);
-    para_buff[2] = (int32_t)(MPU6050_OFFSET->gyr_z*100000000);
-      
+    para_buff[0] = (int32_t)(MPU6050_OFFSET->gyr_x*100000);
+    para_buff[1] = (int32_t)(MPU6050_OFFSET->gyr_y*100000);
+    para_buff[2] = (int32_t)(MPU6050_OFFSET->gyr_z*100000);
       
     WriteFlash(para_buff, FLASH_USER_START_ADDR_2, 3);
     

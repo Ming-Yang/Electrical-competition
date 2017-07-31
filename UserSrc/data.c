@@ -15,6 +15,9 @@ MPU6050_EULER_STRUCT eulerRad;
 
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
+int32_t roll_count=0;
+int32_t roll_acc[10] = {0};
+uint8_t roll_cnt;
 
 //upto 1000lines£¬10ms,30000rmp
 #define DECODER_LINES
@@ -22,16 +25,21 @@ DATA_OUT_STRUCT outdata;
 #define MAX_PWM 10000
 #define DECODER_RAW_GRY 27.27272727273f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
-(data_in):((data_in)-(data_th))
+                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
+
+static int MotorPID(uint8_t LR,float input_speed,float set_speed);
+
 
 void DataInput()
 {
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
-  indata.decoder1.ang_v = indata.decoder1.raw * DECODER_RAW_GRY;
-  TIM4->CNT = 0;
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
+  
+  indata.decoder1.ang_v = indata.decoder1.raw * DECODER_RAW_GRY;
   indata.decoder2.ang_v = indata.decoder2.raw * DECODER_RAW_GRY;
+  
+  TIM4->CNT = 0;
   TIM8->CNT = 0;
   MPU6050_GetData(&indata.mpu6050);
   
@@ -56,18 +64,30 @@ void DataProcess()
     outdata.tim3.channel2 = 0 ;
     outdata.tim3.channel3 = 0 ;
     outdata.tim3.channel4 = 0 ;
+    outdata.speed = 0;
+    outdata.pwm = 0;
   }
   else
   {
-    
-    outdata.tim2.channel1 = MAX_PWM;
-    outdata.tim2.channel2 = MAX_PWM/2;
-    outdata.tim2.channel3 = MAX_PWM/3;
-    outdata.tim2.channel4 = MAX_PWM/4;
-    outdata.tim3.channel1 = MAX_PWM/5;
-    outdata.tim3.channel2 = MAX_PWM/6;
-    outdata.tim3.channel3 = MAX_PWM/7;
-    outdata.tim3.channel4 = MAX_PWM/8;
+    if(fabs(outdata.gy25_euler.roll) < 45.0 )
+      outdata.speed = MotorPID(1,outdata.gy25_euler.roll, setpara.test/10.0);
+    else 
+      outdata.speed = 0;
+    //·ÀÖ¹¹ý×ª
+    if(abs(roll_count) < 330*2)
+      outdata.pwm = MotorPID(0,indata.decoder1.ang_v, outdata.speed);
+    else
+      outdata.pwm = 0;
+    if (outdata.pwm > 0)
+    {
+      outdata.tim2.channel1 = outdata.pwm;
+      outdata.tim2.channel2 = 0;
+    }
+    else
+    {
+      outdata.tim2.channel1 = 0;
+      outdata.tim2.channel2 = -outdata.pwm;
+    }
   }
 }
 
@@ -90,4 +110,43 @@ void DataSave()
   
   if(sys.sd_write)
     DataWriteFatfs();
+}
+
+
+int MotorPID(uint8_t LR,float input_speed,float set_speed)
+{
+  static float powerout_l,error_l,last_error_l,last_last_error_l;
+  static float powerout_r,error_r,last_error_r,last_last_error_r;
+  
+  if(LR == 0)
+  {
+    error_l = set_speed - input_speed;
+    float d_error_l = error_l-last_error_l;
+    float dd_error_l = -2*last_error_l+error_l+last_last_error_l;
+    powerout_l += setpara.speed_pid.kp * d_error_l/10 + setpara.speed_pid.ki * error_l/100 + setpara.speed_pid.kd * dd_error_l/100;
+    last_last_error_l = last_error_l;
+    last_error_l = error_l;
+    
+    //    if(powerout_l>_MAXPWM||error_l>setpara.SpeedBANGBANG)
+    //      powerout_l=MAX_PWM;
+    //    else if(powerout_l<-_MINPWM||error_l<-setpara.SpeedBANGBANG)
+    //      powerout_l=-MAX_PWM;
+    return (int)powerout_l;
+  }
+  
+  else
+  {
+    error_r = set_speed - input_speed;
+    float d_error_r = error_r-last_error_r;
+    float dd_error_r = -2*last_error_r+error_r+last_last_error_r;
+    powerout_r += setpara.angle_pid.kp * d_error_r/10 + setpara.angle_pid.ki * error_r/100 + setpara.angle_pid.kd * dd_error_r/100;
+    last_last_error_r = last_error_r;
+    last_error_r = error_r;
+    
+    //    if(powerout_r>_MAXPWM||error_r>setpara.SpeedBANGBANG)
+    //      powerout_r=MAX_PWM;
+    //    else if(powerout_r<-_MINPWM||error_r<-setpara.SpeedBANGBANG)
+    //      powerout_r=-MAX_PWM;
+    return (int)powerout_r;
+  }
 }

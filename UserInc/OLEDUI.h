@@ -20,9 +20,23 @@ typedef struct
     int32_t mid;
     int32_t max;
   }steer;
-
+  
+  struct 
+  { 
+    int32_t kp;
+    int32_t ki;
+    int32_t kd;
+  }speed_pid;
+  
+  struct 
+  { 
+    int32_t kp;
+    int32_t ki;
+    int32_t kd;
+  }angle_pid;
+  
   int32_t test;
-
+  
 
 
 

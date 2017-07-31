@@ -50,6 +50,7 @@ void PWMStop()
 void UartInit()
 {
   HAL_UART_Receive_IT(&huart2, (uint8_t*)uart2_rx_buff, 1);
+//  HAL_UART_Receive(&huart1, (uint8_t*)uart1_rx_buff, 8);
 }
 
 void GpioInit()

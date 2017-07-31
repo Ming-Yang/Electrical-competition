@@ -26,6 +26,14 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
+  &setpara.speed_pid.kp,
+  &setpara.speed_pid.ki,
+  &setpara.speed_pid.kd,
+  &setpara.angle_pid.kp,
+  &setpara.angle_pid.ki,
+  &setpara.angle_pid.kd,
+  
+//  &setpara,
   
   {0}
 };
@@ -33,10 +41,16 @@ int32_t* para_table[MAX_PARA_SIZE]={
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
-  {&setpara.steer.mid,"SteerMid",1},
-  {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
+  {&setpara.speed_pid.kp,"Pspeed",1},
+  {&setpara.speed_pid.ki,"Ispeed",1},
+  {&setpara.speed_pid.kd,"Dspeed",1},
+  {&setpara.angle_pid.kp,"Pangle",1},
+  {&setpara.angle_pid.ki,"Iangle",1},
+  {&setpara.angle_pid.kd,"Dangle",1},
+  
+//  {&setpara,"",1},
   
   {0}
 };
@@ -55,9 +69,13 @@ void DataNameWriteFatfs()
   F_PRINTF_S(indata.mpu6050.gyr_y);
   F_PRINTF_S(indata.mpu6050.gyr_z);
            
-  F_PRINTF_S(outdata.euler.pitch);
-  F_PRINTF_S(outdata.euler.roll);
-  F_PRINTF_S(outdata.euler.yaw);
+  F_PRINTF_S(outdata.gy25_euler.pitch);
+  F_PRINTF_S(outdata.gy25_euler.roll);
+  F_PRINTF_S(outdata.gy25_euler.yaw);
+  
+  F_PRINTF_S(outdata.pwm);
+  F_PRINTF_S(outdata.speed);
+  F_PRINTF_S(indata.decoder1.angle_v);
   
   f_printf(&fil,"\r\n");
 }
@@ -73,25 +91,39 @@ void DataWriteFatfs()
   F_PRINTF_D(indata.mpu6050.gyr_y);
   F_PRINTF_D(indata.mpu6050.gyr_z);
   
-  F_PRINTF_D((int)(100*outdata.euler.pitch));
-  F_PRINTF_D((int)(100*outdata.euler.roll));
-  F_PRINTF_D((int)(100*outdata.euler.yaw));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.pitch));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
+  
+  F_PRINTF_D(outdata.pwm);
+  F_PRINTF_D((int)(100*outdata.speed));
+  F_PRINTF_D((int)(100*indata.decoder1.ang_v));
   
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",indata.mpu6050.acc_x);
-  printf("%d,",indata.mpu6050.acc_y);
-  printf("%d,",indata.mpu6050.acc_z);
-  printf("%d,",indata.mpu6050.gyr_x);
-  printf("%d,",indata.mpu6050.gyr_y);
-  printf("%d,",indata.mpu6050.gyr_z);
-  
+  printf("%d,",(int)(outdata.speed*10));
+  printf("%d,",outdata.pwm);
   printf("%d,",(int)(outdata.euler.roll *100));
-  printf("%d,",(int)(outdata.euler.pitch*100));
-  printf("%d,",(int)(outdata.euler.yaw  *100));  
+//  printf("%d,",(int)(outdata.euler.roll *100));
+//  printf("%d,",(int)(outdata.euler.pitch *100));
+//  printf("%d,",(int)(outdata.euler.yaw *100));
+  
+  
+  printf("%d,",(int)(indata.decoder1.ang_v*10));
+  printf("%d,",(int)(outdata.speed*10));
+  printf("%d,",outdata.pwm);
+  
+//  printf("%d,",indata.mpu6050.acc_x);
+//  printf("%d,",indata.mpu6050.acc_y);
+//  printf("%d,",indata.mpu6050.acc_z);
+//  printf("%d,",indata.mpu6050.gyr_x);
+//  printf("%d,",indata.mpu6050.gyr_y);
+//  printf("%d,",indata.mpu6050.gyr_z);
+  
+
   printf("\r\n");
 }
 
@@ -107,18 +139,31 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
-    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
-    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,outdata.speed);
+    oledprintf(1,0,"PWM1:%4d,WPM2:%4d",outdata.tim2.channel1,outdata.tim2.channel2);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.gy25_euler.roll,(int)outdata.gy25_euler.pitch,(int)outdata.gy25_euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
     oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
     
   case 1:
+    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
+    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
   case 2:
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
@@ -192,11 +237,11 @@ void SysStop()
   sys.sd_write = 0;
   SDFatFsClose();
   LED_SYS_STOP;
-  char filename[5];
   
-  sys.osc_suspend = 1;
-  sprintf(filename,"%d",setpara.run_counts);
-  SDFatFSRead(strcat(filename,".txt"));
+//  char filename[5];
+//  sys.osc_suspend = 1;
+//  sprintf(filename,"%d",setpara.run_counts);
+//  SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/
@@ -240,6 +285,8 @@ void CheckKey()
     }
     else if(T-pushtime<5000)  
     {
+      extern uint8_t bImuReady;
+      bImuReady = 0;
       InitOffset6050(&indata.mpu6050,&mpu6050_offset);
     }
     else
