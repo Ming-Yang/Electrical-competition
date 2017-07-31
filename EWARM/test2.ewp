@@ -324,7 +324,7 @@
           <state>$PROJ_DIR$\..\Hardware</state>
           <state>$PROJ_DIR$/../Middlewares/Third_Party/FatFs/src/drivers</state>
           <state>$PROJ_DIR$/../Middlewares/Third_Party/FatFs/src</state>
-        <state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /></option>
+        </option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -1171,7 +1171,7 @@
       <name>$PROJ_DIR$\..\UserSrc\OLEDUI.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\UserSrc\PIDBasic.c</name>
+      <name>$PROJ_DIR$\..\UserSrc\PIDController.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\UserSrc\usersrc.c</name>

@@ -37,9 +37,12 @@ typedef struct
   
   int32_t test;
   struct{
-  int32_t PID_Kp;
-  int32_t PID_Ki;
-  int32_t PID_Kd;
+  int32_t speed_kp;
+  int32_t speed_ki;
+  int32_t speed_kd;
+  int32_t angle_kp;
+  int32_t angle_ki;
+  int32_t angle_kd;
   }pid_para;
 
 

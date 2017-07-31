@@ -1,4 +1,4 @@
-#include "PIDBasic.h"
+#include "PIDController.h"
 
 void IncPIDCalc(PID * pid_ptr)
 {
@@ -21,24 +21,27 @@ void IncPIDCalc(PID * pid_ptr)
         //存储误差，用于下次计算
         pid_ptr->prev_error = pid_ptr->last_error;
         pid_ptr->last_error = current_error;
-        //存储控制量，输出中间量，也可用于调试
-        pid_ptr->last_con = current_control;
+        //存储设置值
+        pid_ptr->prev_set_point = pid_ptr->last_set_point;
+        pid_ptr->last_set_point = pid_ptr->set_point;
 
         //累计增量值
-#if DEADZONE
+#if PIDDeadZone
+        //存储控制量，输出中间量，也可用于调试
+        pid_ptr->last_con = current_control;
         if (current_error >= pid_ptr->err_up_infinitesimal
                         ||current_error <= pid_ptr->err_low_infinitesimal)
                 pid_ptr->sum_con += current_control;
 #else
-        pid_ptr->sum_con = current_control;//直接输出不积分
-#endif //DEADZONE
+        pid_ptr->sum_con += current_control;
+#endif //PIDDeadZone
 
-#if BOUND
+#if PIDBound
         if (pid_ptr->sum_con>=pid_ptr->upper_bound)
                 pid_ptr->sum_con = pid_ptr->upper_bound;
         else if (pid_ptr->sum_con<=pid_ptr->lower_bound)
                 pid_ptr->sum_con = pid_ptr->lower_bound;
-#endif //BOUND
+#endif //PIDBound
 
         return;
 }

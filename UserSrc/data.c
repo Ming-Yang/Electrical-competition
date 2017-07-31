@@ -5,7 +5,7 @@
 #include "mpu6050.h"
 #include "interrupt.h"
 #include "mpu6050_process.h"
-#include "PIDBasic.h"
+#include "PIDController.h"
 #include "init.h"
 #include "adc.h"
 
@@ -51,17 +51,18 @@ void DataInput()
   }
 }
     /****PIDtest****/  
-#include "PIDBasic.h"
-  extern PID pid_test;
-  int pwm_con, dpwm_dt;  
-  int last_dpwm_dt, last_pwm_con;
-  int d2pwm_dt2;
+#include "PIDController.h"
+  extern PID euler_speed;
+  extern PID speed_pwm;
+//  int pwm_con, dpwm_dt;  
+//  int last_dpwm_dt, last_pwm_con;
+//  int d2pwm_dt2;
     /****\PIDtest****/  
 
 void DataProcess()
 {
   //姿态融合
-  MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &outdata.euler);
+//  MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &outdata.euler);
 
   
   if(sys.status == READY)
@@ -85,7 +86,26 @@ void DataProcess()
 //      outdata.speed = 0;
 //    //防止过转
 //    if(abs(roll_count) < 330*2)
-      outdata.pwm = MotorPID(0,indata.decoder1.ang_v*100, outdata.speed);
+//      outdata.pwm = MotorPID(0,indata.decoder1.ang_v*100, outdata.speed);
+//    else
+//      outdata.pwm = 0;
+//    if(fabs(outdata.gy25_euler.roll) < 45.0 )
+//    {
+//      euler_speed.set_point = setpara.test/10.0;
+//      euler_speed.current_point = outdata.gy25_euler.roll;
+//      IncPIDCalc(&euler_speed);
+//      outdata.speed = euler_speed.last_con;
+//    }
+//    else 
+//      outdata.speed = 0;
+//    //防止过转
+//    if(abs(roll_count) < 330*2)
+//    {
+      speed_pwm.set_point = (int)(outdata.speed*1);
+      speed_pwm.current_point = (int)(indata.decoder1.ang_v*1);
+      IncPIDCalc(&speed_pwm);
+      outdata.pwm = (int)speed_pwm.sum_con;
+//    }
 //    else
 //      outdata.pwm = 0;
     if (outdata.pwm > 0)
@@ -99,20 +119,7 @@ void DataProcess()
       outdata.tim2.channel2 = -outdata.pwm;
     }
   }
-  
-        //PID控制
-    pid_test.set_point = 2047;
-    pid_test.current_point = indata.adc10;
-    IncPIDCalc(&pid_test);
-    //indata.adc10;
-//    outdata.tim2.channel1 = 8000;
-//    outdata.tim2.channel2 = 7000;
-  //setpara.test  pwmccc/100
-    outdata.tim2.channel3 = setpara.test;
-    outdata.tim2.channel4 = Limit(pid_test.sum_con,0,8399);
-//    outdata.tim3.channel2 = 3000;
-//    outdata.tim3.channel3 = 2000;
-//    outdata.tim3.channel4 = 1000;
+
 }
 
 
@@ -120,9 +127,12 @@ void DataOutput()
 {  
       /****PIDtest****/    
   //初始化PID控制参数
-  pid_test.proportion   = setpara.pid_para.PID_Kp;
-  pid_test.integral     = setpara.pid_para.PID_Ki;
-  pid_test.differential = setpara.pid_para.PID_Kd;
+  euler_speed.proportion   = setpara.pid_para.speed_kp;
+  euler_speed.integral     = setpara.pid_para.speed_ki;
+  euler_speed.differential = setpara.pid_para.speed_kd;
+  speed_pwm.proportion     = setpara.pid_para.angle_kp;
+  speed_pwm.integral       = setpara.pid_para.angle_ki;
+  speed_pwm.differential   = setpara.pid_para.angle_kd;
     /********/
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);

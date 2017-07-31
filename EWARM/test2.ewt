@@ -1359,7 +1359,7 @@
       <name>$PROJ_DIR$\..\UserSrc\OLEDUI.c</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\UserSrc\PIDBasic.c</name>
+      <name>$PROJ_DIR$\..\UserSrc\PIDController.c</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\UserSrc\usersrc.c</name>

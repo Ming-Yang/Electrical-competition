@@ -26,15 +26,18 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
-  &setpara.pid_para.PID_Kp,
-  &setpara.pid_para.PID_Ki,
-  &setpara.pid_para.PID_Kd,
   &setpara.speed_pid.kp,
   &setpara.speed_pid.ki,
   &setpara.speed_pid.kd,
   &setpara.angle_pid.kp,
   &setpara.angle_pid.ki,
   &setpara.angle_pid.kd,
+  &setpara.pid_para.speed_kp,
+  &setpara.pid_para.speed_ki,
+  &setpara.pid_para.speed_kd,
+  &setpara.pid_para.angle_kp,
+  &setpara.pid_para.angle_ki,
+  &setpara.pid_para.angle_kd,
   
 //  &setpara,
   
@@ -46,15 +49,18 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
-  {&setpara.pid_para.PID_Kp,"Kp",1},
-  {&setpara.pid_para.PID_Ki,"Ki",1},
-  {&setpara.pid_para.PID_Kd,"Kd",1},
   {&setpara.speed_pid.kp,"Pspeed",1},
   {&setpara.speed_pid.ki,"Ispeed",1},
   {&setpara.speed_pid.kd,"Dspeed",1},
   {&setpara.angle_pid.kp,"Pangle",1},
   {&setpara.angle_pid.ki,"Iangle",1},
   {&setpara.angle_pid.kd,"Dangle",1},
+  {&setpara.pid_para.speed_kp,"Pspeed",1},
+  {&setpara.pid_para.speed_ki,"Ispeed",1},
+  {&setpara.pid_para.speed_kd,"Dspeed",1},
+  {&setpara.pid_para.angle_kp,"Pangle",1},
+  {&setpara.pid_para.angle_ki,"Iangle",1},
+  {&setpara.pid_para.angle_kd,"Dangle",1},
   
 //  {&setpara,"",1},
   
@@ -108,7 +114,8 @@ void DataWriteFatfs()
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
-#include "PIDBasic.h"
+#include "PIDController.h"
+
 void SendOscilloscope()
 {
   printf("%d,",(int)(outdata.speed*10));
@@ -120,8 +127,8 @@ void SendOscilloscope()
 //  printf("\r\n");
 
   
-  extern PID pid_test;
-  extern int pwm_con;
+//  extern PID pid_test;
+//  extern int pwm_con;
   
   
   printf("%d,",(int)(indata.decoder1.ang_v*10));
@@ -133,15 +140,15 @@ void SendOscilloscope()
 //  printf("%d,",indata.mpu6050.acc_z);
 //  printf("%d,",indata.mpu6050.gyr_x);
 //  printf("%d,",indata.mpu6050.gyr_y);
-  printf("%d,",pid_test.current_point);
-  printf("%d,",pid_test.set_point); 
-  printf("%d,",(int)pid_test.last_con);
-  printf("%d,",(int)(pid_test.proportion  ));
-  printf("%d,",(int)(pid_test.integral    ));
-  printf("%d,",(int)(pid_test.differential));
-  printf("%d,",0);   
-  printf("%d,",pwm_con);
-  printf("%d,",pid_test.last_error);
+//  printf("%d,",pid_test.current_point);
+//  printf("%d,",pid_test.set_point); 
+//  printf("%d,",(int)pid_test.last_con);
+//  printf("%d,",(int)(pid_test.proportion  ));
+//  printf("%d,",(int)(pid_test.integral    ));
+//  printf("%d,",(int)(pid_test.differential));
+//  printf("%d,",0);   
+//  printf("%d,",pwm_con);
+//  printf("%d,",pid_test.last_error);
 //  printf("%d,",indata.mpu6050.gyr_z);
   
 
@@ -223,9 +230,9 @@ void SysCheck()
   }
 }
     /****PIDtest****/  
-#include "PIDBasic.h"
-  PID pid_test;
-extern int pwm_con;
+#include "PIDController.h"
+  PID euler_speed ;
+  PID speed_pwm;
     /****\PIDtest****/  
 
 
@@ -246,18 +253,21 @@ void SysRun()
     DataNameWriteFatfs();
     
     /****PIDtest****/        
-  pid_test.proportion =    setpara.pid_para.PID_Kp;
-  pid_test.integral =    setpara.pid_para.PID_Ki;
-  pid_test.differential =    setpara.pid_para.PID_Kd;
-  pid_test.delta = 0.4;
-  pid_test.upper_bound = 8399;
-  pid_test.lower_bound = 0;
-  pid_test.err_up_limit  = 1000;
-  pid_test.err_low_limit  = -pid_test.err_up_limit;
-  pid_test.err_up_infinitesimal = 10;
-  pid_test.err_low_infinitesimal = - pid_test.err_up_infinitesimal;
-  pwm_con = 0;
-  dpwm_dt= 0;
+  euler_speed.proportion   =    setpara.pid_para.speed_kp;
+  euler_speed.integral     =    setpara.pid_para.speed_ki;
+  euler_speed.differential =    setpara.pid_para.speed_kd;
+  euler_speed.upper_bound = 1200;
+  euler_speed.lower_bound = - euler_speed.upper_bound;
+  euler_speed.err_up_infinitesimal = 10;
+  euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
+  
+  speed_pwm.proportion   =    setpara.pid_para.angle_kp;
+  speed_pwm.integral     =    setpara.pid_para.angle_ki;
+  speed_pwm.differential =    setpara.pid_para.angle_kd;
+  speed_pwm.upper_bound = 10000;
+  speed_pwm.lower_bound = 0;
+  speed_pwm.err_up_infinitesimal = 50;
+  speed_pwm.err_low_infinitesimal = - speed_pwm.err_up_infinitesimal;
   //≥ı ºªØΩ· ¯
     /********/
     
