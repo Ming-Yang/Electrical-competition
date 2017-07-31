@@ -106,7 +106,7 @@ void SendOscilloscope()
 {
   printf("%d,",(int)(outdata.speed*10));
   printf("%d,",outdata.pwm);
-  printf("%d,",(int)(outdata.euler.roll *100));
+  printf("%d,",(int)(outdata.gy25_euler.roll *100));
 //  printf("%d,",(int)(outdata.euler.roll *100));
 //  printf("%d,",(int)(outdata.euler.pitch *100));
 //  printf("%d,",(int)(outdata.euler.yaw *100));

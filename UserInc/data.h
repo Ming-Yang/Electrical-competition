@@ -47,7 +47,7 @@ void DataOutput();
 void DataNoPut();
 void DataProcess();
 
-
+void GetGY_25(MPU6050_EULER_STRUCT*);
 
 #endif
 

@@ -37,6 +37,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }
     HAL_UART_Receive_IT(&huart2, (uint8_t*)&buff, 1);
   }
+//  else
+//  {
+//    outdata.gy25_euler.pitch = ((int16_t)( (uart1_rx_buff[3] << 8) | uart1_rx_buff[4] )) / 100.0f; 
+//    outdata.gy25_euler.roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
+//    outdata.gy25_euler.yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
+//    
+//  }
 }
 
 
