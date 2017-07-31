@@ -69,15 +69,15 @@ void DataProcess()
   }
   else
   {
-    if(fabs(outdata.gy25_euler.roll) < 45.0 )
-      outdata.speed = MotorPID(1,outdata.gy25_euler.roll, setpara.test/10.0);
-    else 
-      outdata.speed = 0;
-    //防止过转
-    if(abs(roll_count) < 330*2)
-      outdata.pwm = MotorPID(0,indata.decoder1.ang_v, outdata.speed);
-    else
-      outdata.pwm = 0;
+//    if(fabs(outdata.gy25_euler.roll) < 45.0 )
+//      outdata.speed = MotorPID(1,outdata.gy25_euler.roll, setpara.test/10.0);
+//    else 
+//      outdata.speed = 0;
+//    //防止过转
+//    if(abs(roll_count) < 330*2)
+      outdata.pwm = MotorPID(0,indata.decoder1.ang_v*100, outdata.speed);
+//    else
+//      outdata.pwm = 0;
     if (outdata.pwm > 0)
     {
       outdata.tim2.channel1 = outdata.pwm;
@@ -139,7 +139,7 @@ int MotorPID(uint8_t LR,float input_speed,float set_speed)
     error_r = set_speed - input_speed;
     float d_error_r = error_r-last_error_r;
     float dd_error_r = -2*last_error_r+error_r+last_last_error_r;
-    powerout_r += setpara.angle_pid.kp * d_error_r/10 + setpara.angle_pid.ki * error_r/100 + setpara.angle_pid.kd * dd_error_r/100;
+    powerout_r = setpara.angle_pid.kp * d_error_r/10 + setpara.angle_pid.ki * error_r/100 + setpara.angle_pid.kd * dd_error_r/100;
     last_last_error_r = last_error_r;
     last_error_r = error_r;
     
