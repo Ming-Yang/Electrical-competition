@@ -22,6 +22,5 @@ typedef struct PIDs
 #define PIDLowPassFilter 1
 #define PIDBound 1
 #define PIDDeadZone 1
-void IncPIDCalcSum(PID * pid_ptr);
 void IncPIDCalc(PID * pid_ptr);
 #endif /*__PIDBASIC_H*/
