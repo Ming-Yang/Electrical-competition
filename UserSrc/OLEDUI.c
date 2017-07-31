@@ -26,6 +26,9 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
+  &setpara.pid_para.PID_Kp,
+  &setpara.pid_para.PID_Ki,
+  &setpara.pid_para.PID_Kd,
   &setpara.speed_pid.kp,
   &setpara.speed_pid.ki,
   &setpara.speed_pid.kd,
@@ -43,6 +46,9 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
+  {&setpara.pid_para.PID_Kp,"Kp",1},
+  {&setpara.pid_para.PID_Ki,"Ki",1},
+  {&setpara.pid_para.PID_Kd,"Kd",1},
   {&setpara.speed_pid.kp,"Pspeed",1},
   {&setpara.speed_pid.ki,"Ispeed",1},
   {&setpara.speed_pid.kd,"Dspeed",1},
@@ -102,14 +108,20 @@ void DataWriteFatfs()
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
+#include "PIDBasic.h"
 void SendOscilloscope()
 {
   printf("%d,",(int)(outdata.speed*10));
   printf("%d,",outdata.pwm);
-  printf("%d,",(int)(outdata.euler.roll *100));
+//  
 //  printf("%d,",(int)(outdata.euler.roll *100));
-//  printf("%d,",(int)(outdata.euler.pitch *100));
-//  printf("%d,",(int)(outdata.euler.yaw *100));
+//  printf("%d,",(int)(outdata.euler.pitch*100));
+//  printf("%d,",(int)(outdata.euler.yaw  *100));  
+//  printf("\r\n");
+
+  
+  extern PID pid_test;
+  extern int pwm_con;
   
   
   printf("%d,",(int)(indata.decoder1.ang_v*10));
@@ -121,6 +133,15 @@ void SendOscilloscope()
 //  printf("%d,",indata.mpu6050.acc_z);
 //  printf("%d,",indata.mpu6050.gyr_x);
 //  printf("%d,",indata.mpu6050.gyr_y);
+  printf("%d,",pid_test.current_point);
+  printf("%d,",pid_test.set_point); 
+  printf("%d,",(int)pid_test.last_con);
+  printf("%d,",(int)(pid_test.proportion  ));
+  printf("%d,",(int)(pid_test.integral    ));
+  printf("%d,",(int)(pid_test.differential));
+  printf("%d,",0);   
+  printf("%d,",pwm_con);
+  printf("%d,",pid_test.last_error);
 //  printf("%d,",indata.mpu6050.gyr_z);
   
 
@@ -201,7 +222,13 @@ void SysCheck()
   default:break;
   }
 }
-  
+    /****PIDtest****/  
+#include "PIDBasic.h"
+  PID pid_test;
+extern int pwm_con;
+    /****\PIDtest****/  
+
+
 void SysRun()
 {
   char filename[5] = {0};
@@ -217,6 +244,22 @@ void SysRun()
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
+    
+    /****PIDtest****/        
+  pid_test.proportion =    setpara.pid_para.PID_Kp;
+  pid_test.integral =    setpara.pid_para.PID_Ki;
+  pid_test.differential =    setpara.pid_para.PID_Kd;
+  pid_test.delta = 0.4;
+  pid_test.upper_bound = 8399;
+  pid_test.lower_bound = 0;
+  pid_test.err_up_limit  = 1000;
+  pid_test.err_low_limit  = -pid_test.err_up_limit;
+  pid_test.err_up_infinitesimal = 10;
+  pid_test.err_low_infinitesimal = - pid_test.err_up_infinitesimal;
+  pwm_con = 0;
+  dpwm_dt= 0;
+  //初始化结束
+    /********/
     
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
@@ -237,7 +280,7 @@ void SysStop()
   sys.sd_write = 0;
   SDFatFsClose();
   LED_SYS_STOP;
-  
+//  
 //  char filename[5];
 //  sys.osc_suspend = 1;
 //  sprintf(filename,"%d",setpara.run_counts);

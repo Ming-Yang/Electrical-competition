@@ -36,8 +36,11 @@ typedef struct
   }angle_pid;
   
   int32_t test;
-  
-
+  struct{
+  int32_t PID_Kp;
+  int32_t PID_Ki;
+  int32_t PID_Kd;
+  }pid_para;
 
 
 }PARA_LIST_STRUCT;

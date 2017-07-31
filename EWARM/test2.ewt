@@ -1359,6 +1359,9 @@
       <name>$PROJ_DIR$\..\UserSrc\OLEDUI.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\UserSrc\PIDBasic.c</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\UserSrc\usersrc.c</name>
     </file>
     <file>

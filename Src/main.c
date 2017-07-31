@@ -115,6 +115,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   InitAll();
+  SysRun();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -143,7 +144,7 @@ int main(void)
 void SystemClock_Config(void)
 {
 
-  RCC_OscInitTypeDef RCC_OscInitStruct;
+RCC_OscInitTypeDef RCC_OscInitStruct;
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
 
     /**Configure the main internal regulator output voltage 
