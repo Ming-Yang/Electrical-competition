@@ -28,6 +28,7 @@ uint8_t roll_cnt;
                                      (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
 
+static void GetGY_25(MPU6050_EULER_STRUCT*);
 static int MotorPID(uint8_t LR,float input_speed,float set_speed);
 
 
@@ -42,6 +43,7 @@ void DataInput()
   TIM4->CNT = 0;
   TIM8->CNT = 0;
   MPU6050_GetData(&indata.mpu6050);
+  GetGY_25(&outdata.gy25_euler);
   
   if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
   {
@@ -149,4 +151,15 @@ int MotorPID(uint8_t LR,float input_speed,float set_speed)
     //      powerout_r=-MAX_PWM;
     return (int)powerout_r;
   }
+}
+
+void GetGY_25(MPU6050_EULER_STRUCT *gy25)
+{
+    int a;
+    a= 0x51a5;
+    HAL_UART_Transmit(&huart1,(uint8_t*)&(a),2,0xffff);
+    HAL_UART_Receive(&huart1, (uint8_t*)uart1_rx_buff, 8,0xffff);
+    gy25->pitch = ((int16_t)( (uart1_rx_buff[3] << 8) | uart1_rx_buff[4] )) / 100.0f; 
+    gy25->roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
+    gy25->yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
 }
