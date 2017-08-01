@@ -32,7 +32,8 @@ uint8_t roll_cnt;
 #define DECODER_LINES   330
 #define DECODER_COUNT 10000
 #define MAX_PWM 10000
-#define DECODER_RAW_GRY 27.27272727273f
+#define DECODER_RAW_GRY 0.27272727273f
+#define DECODER2_RAW_GRY 0.36f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                      (data_in):((data_in)-(data_th))
 #define Limit(x,b,a) (x)>(a)?(a):((x)<(b)?(b):(x))
@@ -46,14 +47,14 @@ void DataInput()
   //获得编码器参数
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
-  indata.decoder1.acc_roll += indata.decoder1.raw;
-  indata.decoder2.acc_roll += indata.decoder2.raw;
+  indata.decoder1.acc_roll = indata.decoder1.raw;
+  indata.decoder2.acc_roll = indata.decoder2.raw;
   
-  indata.decoder1.ang_v = indata.decoder1.raw * DECODER_RAW_GRY;
-  indata.decoder2.ang_v = indata.decoder2.raw * DECODER_RAW_GRY;
+  indata.decoder1.ang_v = indata.decoder1.acc_roll * DECODER_RAW_GRY;
+  indata.decoder2.ang_v = indata.decoder2.acc_roll * DECODER2_RAW_GRY;
   
-  TIM4->CNT = 0;
-  TIM8->CNT = 0;
+//  TIM4->CNT = 0;
+//  TIM8->CNT = 0;
   
   MPU6050_GetData(&indata.mpu6050);
   GetGY_25(&outdata.gy25_euler);
@@ -127,7 +128,7 @@ void DataProcess()
     //防止过转
     if(abs(indata.decoder1.acc_roll) < DECODER_LINES*4)
     {
-//      outdata.speed = setpara.test2;
+      outdata.speed = setpara.test2;
       speed_pwm.set_point = outdata.speed;
       speed_pwm.current_point = indata.decoder1.ang_v;
       IncPIDCalc(&speed_pwm);

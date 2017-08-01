@@ -172,7 +172,7 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,outdata.speed);
+    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,indata.decoder2.ang_v);
     oledprintf(1,0,"PWM1:%4d,WPM2:%4d",outdata.tim2.channel1,outdata.tim2.channel2);
     oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.gy25_euler.roll,(int)outdata.gy25_euler.pitch,(int)outdata.gy25_euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
@@ -275,6 +275,8 @@ void SysRun()
     /********/
     
     while(T - t_last < BUFF_TIME_MS);
+    TIM8->CNT = 0;
+    TIM4->CNT = 0;
     LCD_CLS();
     sys.sd_write = 1;
     LED_SYS_RUN;
