@@ -39,7 +39,7 @@ uint8_t roll_cnt;
 #define OCS_PIN PEin(12) 
 
 static int MotorPID(uint8_t LR,float input_speed,float set_speed);
-
+void GetGY_25(MPU6050_EULER_STRUCT*);
 
 void DataInput()
 {
@@ -56,6 +56,7 @@ void DataInput()
   TIM8->CNT = 0;
   
   MPU6050_GetData(&indata.mpu6050);
+  GetGY_25(&outdata.gy25_euler);
   
   /****PIDtest****/    
   //获得PID控制参数
@@ -109,21 +110,26 @@ void DataProcess()
     
     
     //new pid!!!!!!!!!!!!!!!!!!!!!!!!    
-    if(fabs(outdata.gy25_euler.roll) < 45.0 )
+    if(fabs(outdata.gy25_euler.roll) < 70.0 )
     {
-      euler_speed.set_point = setpara.test*10;
-      euler_speed.current_point = outdata.gy25_euler.roll*100;
+      euler_speed.set_point = setpara.test*0.1f;
+      euler_speed.current_point = outdata.gy25_euler.roll;
       IncPIDCalc(&euler_speed);
-      outdata.speed = euler_speed.last_con;
+      outdata.speed = euler_speed.sum_con;
+      if(outdata.gy25_euler.roll > 20)
+        outdata.speed = -2000;
+      if(outdata.gy25_euler.roll < -20)
+        outdata.speed = 2000;
+      
     }
     else 
       outdata.speed = 0;
     //防止过转
-    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*2)
+    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*12)
     {
 //      outdata.speed = setpara.test2;
-      speed_pwm.set_point = (int)(outdata.speed*10);
-      speed_pwm.current_point = (int)(indata.decoder1.ang_v*10);
+      speed_pwm.set_point = outdata.speed;
+      speed_pwm.current_point = indata.decoder1.ang_v;
       IncPIDCalc(&speed_pwm);
       outdata.pwm = (int)speed_pwm.sum_con;
     }
@@ -202,4 +208,16 @@ int MotorPID(uint8_t LR,float input_speed,float set_speed)
     //      powerout_r=-MAX_PWM;
     return (int)powerout_r;
   }
+}
+
+void GetGY_25(MPU6050_EULER_STRUCT *gy25)
+{
+    int a;
+    a= 0x51a5;
+    HAL_UART_Transmit(&huart1,(uint8_t*)&(a),2,0xFFFF);
+    HAL_UART_Receive(&huart1, (uint8_t*)uart1_rx_buff, 8, 0x01);
+    
+    gy25->pitch = ((int16_t)( (uart1_rx_buff[3] << 8) | uart1_rx_buff[4] )) / 100.0f; 
+    gy25->roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
+    gy25->yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
 }

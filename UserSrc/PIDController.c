@@ -9,7 +9,7 @@ void IncPIDCalc(PID * pid_ptr)
 #if   PIDLowPassFilter
         pid_ptr->set_point = 0.1 * pid_ptr->set_point + 0.8 * pid_ptr->last_set_point + 0.1 * pid_ptr->prev_set_point;
 #endif  //PIDLowPassFilter
-        int current_error  = pid_ptr->set_point - pid_ptr->current_point;
+        float current_error  = pid_ptr->set_point - pid_ptr->current_point;
         float const_A = proportion  + integral + differential;
         float const_B = proportion  + differential * 2;
         float const_C = differential;

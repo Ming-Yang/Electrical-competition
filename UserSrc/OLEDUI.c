@@ -130,14 +130,15 @@ void SendOscilloscope()
 //  printf("%d,",(int)(outdata.euler.pitch*100));
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
-  printf("%d,",(int)(speed_pwm.set_point));
+  
+  printf("%d,",(int)(speed_pwm.set_point)*1);
   printf("%d,",(int)(speed_pwm.current_point));
+  printf("%d,",(int)(speed_pwm.sum_con));
   
   
-  printf("%d,",(int)(speed_pwm.last_set_point));
-  printf("%d,",(int)(indata.decoder1.ang_v*10));
-  printf("%d,",(int)(outdata.speed*10));
-  printf("%d,",outdata.pwm);
+  printf("%d,",(int)(euler_speed.set_point));
+  printf("%d,",(int)(euler_speed.current_point));
+  printf("%d,",(int)(euler_speed.sum_con)/10);
   
 //  printf("%d,",indata.mpu6050.acc_x);
 //  printf("%d,",indata.mpu6050.acc_y);
@@ -257,18 +258,18 @@ void SysRun()
   euler_speed.proportion   =    setpara.pid_para.speed_kp;
   euler_speed.integral     =    setpara.pid_para.speed_ki;
   euler_speed.differential =    setpara.pid_para.speed_kd;
-  euler_speed.upper_bound = 1200;
-  euler_speed.lower_bound = - euler_speed.upper_bound;
-  euler_speed.err_up_infinitesimal = 10;
+  euler_speed.upper_bound = 2000.0;
+  euler_speed.lower_bound = - 2000.0;
+  euler_speed.err_up_infinitesimal = 10.0;
   euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
   
   memset(&speed_pwm,0,sizeof(speed_pwm));
   speed_pwm.proportion   =    setpara.pid_para.angle_kp;
   speed_pwm.integral     =    setpara.pid_para.angle_ki;
   speed_pwm.differential =    setpara.pid_para.angle_kd;
-  speed_pwm.upper_bound = 10000;
-  speed_pwm.lower_bound = -10000;
-  speed_pwm.err_up_infinitesimal = 25;
+  speed_pwm.upper_bound = 10000.0;
+  speed_pwm.lower_bound = -10000.0;
+  speed_pwm.err_up_infinitesimal = 25.0;
   speed_pwm.err_low_infinitesimal = - speed_pwm.err_up_infinitesimal;
   //≥ı ºªØΩ· ¯
     /********/

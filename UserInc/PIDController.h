@@ -2,24 +2,24 @@
 #define __PIDBASIC_H
 typedef struct PIDs
 {
-        int set_point;
-        int last_set_point;
-        int prev_set_point;
-        int current_point;
-        int last_point;
-        int proportion;
-        int integral;
-        int differential;
+        float set_point;
+        float last_set_point;
+        float prev_set_point;
+        float current_point;
+        float last_point;
+        float proportion;
+        float integral;
+        float differential;
         float last_con;
         float sum_con;
-        int last_error;
-        int prev_error;
-        int err_up_infinitesimal;
-        int err_low_infinitesimal;
-        int upper_bound;
-        int lower_bound;
+        float last_error;
+        float prev_error;
+        float err_up_infinitesimal;
+        float err_low_infinitesimal;
+        float upper_bound;
+        float lower_bound;
 }PID;
-#define PIDLowPassFilter 1
+#define PIDLowPassFilter 0
 #define PIDBound 1
 #define PIDDeadZone 1
 void IncPIDCalc(PID * pid_ptr);
