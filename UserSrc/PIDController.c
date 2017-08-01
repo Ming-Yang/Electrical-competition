@@ -1,4 +1,4 @@
-#include "PIDBasic.h"
+#include "PIDController.h"
 
 #if PIDKalmanFilter
 typedef struct KALMAN_FILTERs
@@ -20,11 +20,11 @@ void KalmanFilter(KALMAN_FILTER* kf)
 {
         kf->x_mid = kf->x_last; //x_last=x(k-1|k-1),x_mid=x(k|k-1)
         kf->p_mid = kf->p_last + kf->Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
-        kf->kg = kf->p_mid / (kf->p_mid + kf->R); //kg为kalman filter，R为噪声
-        kf->x_now = kf->x_mid + kf->kg*(kf->resrc_data - kf->x_mid);//估计出的最优值
-        kf->p_now = (1 - kf->kg)*kf->p_mid;//最优值对应的协方差
-        kf->p_last = kf->p_now;   //更新covariance值
-        kf->x_last = kf->x_now;   //更新系统状态值
+        kf->kg = kf->p_mid / (kf->p_mid + kf->R); //kg为kalman filter，R为噪�
+        kf->x_now = kf->x_mid + kf->kg*(kf->resrc_data - kf->x_mid);//估计出的最优�
+        kf->p_now = (1 - kf->kg)*kf->p_mid;//最优值对应的协方�
+        kf->p_last = kf->p_now;   //更新covariance�
+        kf->x_last = kf->x_now;   //更新系统状态�
 }
 #endif //PIDKalmanFilter
 
@@ -41,7 +41,7 @@ void IncPIDCalc(PID * pid_ptr)
           kf.init = 1;
           return;
         }
-        //输入值滤波
+        //输入值滤�
         kf.resrc_data = pid_ptr->current_point;
         KalmanFilter(&kf);
         pid_ptr->current_point = kf.x_now;        
@@ -54,29 +54,32 @@ void IncPIDCalc(PID * pid_ptr)
 #if   PIDLowPassFilter
         pid_ptr->set_point = 0.1 * pid_ptr->set_point + 0.8 * pid_ptr->last_set_point + 0.1 * pid_ptr->prev_set_point;
 #endif  //PIDLowPassFilter
-        int current_error  = pid_ptr->set_point - pid_ptr->current_point;
+        float current_error  = pid_ptr->set_point - pid_ptr->current_point;
         float const_A = proportion  + integral + differential;
         float const_B = proportion  + differential * 2;
         float const_C = differential;
 
         //增量计算
-        float current_control = const_A * current_error //E[k]项
-                - const_B * pid_ptr->last_error //E[k－1]项
-                + const_C * pid_ptr->prev_error; //E[k－2]项
-        //存储误差，用于下次计算
+        float current_control = const_A * current_error //E[k]�
+                - const_B * pid_ptr->last_error //E[k�]�
+                + const_C * pid_ptr->prev_error; //E[k�]�
+        //存储误差，用于下次计�
         pid_ptr->prev_error = pid_ptr->last_error;
         pid_ptr->last_error = current_error;
+        //存储设置�
+        pid_ptr->prev_set_point = pid_ptr->last_set_point;
+        pid_ptr->last_set_point = pid_ptr->set_point;
+
+        //累计增量�
+#if PIDDeadZone
         //存储控制量，输出中间量，也可用于调试
         pid_ptr->last_con = current_control;
-
-        //累计增量值
-#if PIDDeadzone
         if (current_error >= pid_ptr->err_up_infinitesimal
                         ||current_error <= pid_ptr->err_low_infinitesimal)
                 pid_ptr->sum_con += current_control;
 #else
-        pid_ptr->sum_con = current_control;//直接输出不积分
-#endif //PIDDeadzone
+        pid_ptr->sum_con += current_control;
+#endif //PIDDeadZone
 
 #if PIDBound
         if (pid_ptr->sum_con>=pid_ptr->upper_bound)
@@ -100,8 +103,8 @@ void LocPIDCalc(PID * pid_ptr)
         pid_ptr->last_error = current_error;
         
 #if PIDIntegrationSaturation
-         //抗饱和
-        int alpha;//抗饱和系数
+         //抗饱�
+        int alpha;//抗饱和系�
         if (pid_ptr->last_con >= pid_ptr->upper_bound)
         {
             if (current_error > 0) 
@@ -118,9 +121,9 @@ void LocPIDCalc(PID * pid_ptr)
         }
         else
           alpha = 1;
-        pid_ptr->sum_error += current_error * alpha; //抗饱和积分
+        pid_ptr->sum_error += current_error * alpha; //抗饱和积�
 #else        
-        pid_ptr->sum_error += current_error; //普通积分
+        pid_ptr->sum_error += current_error; //普通积�
 #endif // IntegrationSaturation
         
         float int_con;        
@@ -151,19 +154,19 @@ void LocPIDCalc(PID * pid_ptr)
     dif_con = differential * diff_error;
 #endif // PIDPartialDifferential
             
-                //累计增量值
+                //累计增量�
 #if PIDDeadZone
         if (current_error >= pid_ptr->err_up_infinitesimal
           ||current_error <= pid_ptr->err_low_infinitesimal)
-          pid_ptr->sum_con+= proportion * current_error //比例项
-                           + int_con                    //积分项
-                           + differential * diff_error; //微分项
+          pid_ptr->sum_con+= proportion * current_error //比例�
+                           + int_con                    //积分�
+                           + differential * diff_error; //微分�
         else
           pid_ptr->sum_con = pid_ptr->last_con;
 #else
-        pid_ptr->sum_con = proportion * current_error //比例项
-                         + int_con//积分项
-                         + differential * diff_error; //微分项
+        pid_ptr->sum_con = proportion * current_error //比例�
+                         + int_con//积分�
+                         + differential * diff_error; //微分�
 #endif //PIDDeadZone
                 
 #if PIDBound

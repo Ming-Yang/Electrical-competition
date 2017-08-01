@@ -9,6 +9,8 @@
 typedef struct 
 {
   int32_t raw;
+  int32_t acc_roll;
+  uint16_t lines;
   float ang_v;
   float line_v;
 }DECODER_STRUCT;
@@ -34,7 +36,9 @@ typedef struct
   CHANNEL_STRUCT tim2;
   CHANNEL_STRUCT tim3;
   MPU6050_EULER_STRUCT euler;
-  
+  MPU6050_EULER_STRUCT gy25_euler;
+  float speed;
+  int pwm;
 }DATA_OUT_STRUCT;
 
 

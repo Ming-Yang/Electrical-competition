@@ -4,6 +4,11 @@
 #include "flash.h"
 #include "data.h"
 #include "interrupt.h"
+/****PIDtest****/  
+#include "PIDController.h"
+PID euler_speed ;
+PID speed_pwm;
+/****\PIDtest****/  
 
 #define BUFF_TIME_MS 2000
 #define LED_SYS_RUN     PEout(6)=0
@@ -26,9 +31,21 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.steer.mid,
   &setpara.steer.max,
   &setpara.test,
-  &setpara.pid_para.PID_Kp,
-  &setpara.pid_para.PID_Ki,
-  &setpara.pid_para.PID_Kd,
+  &setpara.test2,
+  &setpara.speed_pid.kp,
+  &setpara.speed_pid.ki,
+  &setpara.speed_pid.kd,
+  &setpara.angle_pid.kp,
+  &setpara.angle_pid.ki,
+  &setpara.angle_pid.kd,
+  &setpara.pid_para.speed_kp,
+  &setpara.pid_para.speed_ki,
+  &setpara.pid_para.speed_kd,
+  &setpara.pid_para.angle_kp,
+  &setpara.pid_para.angle_ki,
+  &setpara.pid_para.angle_kd,
+  
+//  &setpara,
   
   {0}
 };
@@ -36,13 +53,23 @@ int32_t* para_table[MAX_PARA_SIZE]={
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
   {&setpara.set_time,"SetTime",1},
-//  {&setpara.steer.mid,"SteerMid",1},
-//  {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
-  {&setpara.pid_para.PID_Kp,"Kp",1},
-  {&setpara.pid_para.PID_Ki,"Ki",1},
-  {&setpara.pid_para.PID_Kd,"Kd",1},
+  {&setpara.test2,"Test2",1},
+  {&setpara.speed_pid.kp,"Pspeed",1},
+  {&setpara.speed_pid.ki,"Ispeed",1},
+  {&setpara.speed_pid.kd,"Dspeed",1},
+  {&setpara.angle_pid.kp,"Pangle",1},
+  {&setpara.angle_pid.ki,"Iangle",1},
+  {&setpara.angle_pid.kd,"Dangle",1},
+  {&setpara.pid_para.speed_kp,"Pspeed",1},
+  {&setpara.pid_para.speed_ki,"Ispeed",1},
+  {&setpara.pid_para.speed_kd,"Dspeed",1},
+  {&setpara.pid_para.angle_kp,"Pangle",1},
+  {&setpara.pid_para.angle_ki,"Iangle",1},
+  {&setpara.pid_para.angle_kd,"Dangle",1},
+  
+//  {&setpara,"",1},
   
   {0}
 };
@@ -61,9 +88,13 @@ void DataNameWriteFatfs()
   F_PRINTF_S(indata.mpu6050.gyr_y);
   F_PRINTF_S(indata.mpu6050.gyr_z);
            
-  F_PRINTF_S(outdata.euler.pitch);
-  F_PRINTF_S(outdata.euler.roll);
-  F_PRINTF_S(outdata.euler.yaw);
+  F_PRINTF_S(outdata.gy25_euler.pitch);
+  F_PRINTF_S(outdata.gy25_euler.roll);
+  F_PRINTF_S(outdata.gy25_euler.yaw);
+  
+  F_PRINTF_S(outdata.pwm);
+  F_PRINTF_S(outdata.speed);
+  F_PRINTF_S(indata.decoder1.angle_v);
   
   f_printf(&fil,"\r\n");
 }
@@ -79,43 +110,53 @@ void DataWriteFatfs()
   F_PRINTF_D(indata.mpu6050.gyr_y);
   F_PRINTF_D(indata.mpu6050.gyr_z);
   
-  F_PRINTF_D((int)(100*outdata.euler.pitch));
-  F_PRINTF_D((int)(100*outdata.euler.roll));
-  F_PRINTF_D((int)(100*outdata.euler.yaw));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.pitch));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
+  
+  F_PRINTF_D(outdata.pwm);
+  F_PRINTF_D((int)(100*outdata.speed));
+  F_PRINTF_D((int)(100*indata.decoder1.ang_v));
   
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
-#include "PIDBasic.h"
 void SendOscilloscope()
 {
-//  printf("%d,",indata.mpu6050.acc_x);
-//  printf("%d,",indata.mpu6050.acc_y);
-//  printf("%d,",indata.mpu6050.acc_z);
-//  printf("%d,",indata.mpu6050.gyr_x);
-//  printf("%d,",indata.mpu6050.gyr_y);
-//  printf("%d,",indata.mpu6050.gyr_z);
-//  
+//  printf("%d,",(int)(outdata.speed*10));
+//  printf("%d,",outdata.pwm);
+  
 //  printf("%d,",(int)(outdata.euler.roll *100));
 //  printf("%d,",(int)(outdata.euler.pitch*100));
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
   
+  printf("%d,",(int)(speed_pwm.set_point)*1);
+  printf("%d,",(int)(speed_pwm.current_point));
+  printf("%d,",(int)(speed_pwm.sum_con));
+  
+  
+  printf("%d,",(int)(euler_speed.set_point));
+  printf("%d,",(int)(euler_speed.current_point));
+  printf("%d,",(int)(euler_speed.sum_con)/10);
+  
+//  printf("%d,",indata.mpu6050.acc_x);
+//  printf("%d,",indata.mpu6050.acc_y);
+//  printf("%d,",indata.mpu6050.acc_z);
+//  printf("%d,",indata.mpu6050.gyr_x);
+//  printf("%d,",indata.mpu6050.gyr_y);
+//  printf("%d,",pid_test.current_point);
+//  printf("%d,",pid_test.set_point); 
+//  printf("%d,",(int)pid_test.last_con);
+//  printf("%d,",(int)(pid_test.proportion  ));
+//  printf("%d,",(int)(pid_test.integral    ));
+//  printf("%d,",(int)(pid_test.differential));
+//  printf("%d,",0);   
+//  printf("%d,",pwm_con);
+//  printf("%d,",pid_test.last_error);
+//  printf("%d,",indata.mpu6050.gyr_z);
+  
 
-  
-  extern PID pid_test;
-  extern int pwm_con;
-  
-  
-  printf("%d,",pid_test.current_point);
-  printf("%d,",pid_test.set_point); 
-  printf("%d,",(int)pid_test.last_con);
-  printf("%d,",(int)(pid_test.proportion  ));
-  printf("%d,",(int)(pid_test.integral    ));
-  printf("%d,",(int)(pid_test.differential));
-  printf("%d,",0);   
-  printf("%d,",pwm_con);
-  printf("%d,",pid_test.last_error);
   printf("\r\n");
 }
 
@@ -131,18 +172,31 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
-    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
-    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,outdata.speed);
+    oledprintf(1,0,"PWM1:%4d,WPM2:%4d",outdata.tim2.channel1,outdata.tim2.channel2);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.gy25_euler.roll,(int)outdata.gy25_euler.pitch,(int)outdata.gy25_euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
     oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
     
   case 1:
+    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
+    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
   case 2:
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
@@ -180,11 +234,6 @@ void SysCheck()
   default:break;
   }
 }
-    /****PIDtest****/  
-#include "PIDBasic.h"
-  PID pid_test;
-extern int pwm_con;
-    /****\PIDtest****/  
 
 
 void SysRun()
@@ -195,6 +244,7 @@ void SysRun()
   if(sys.status == READY)
   {
     memset(&sys,0,sizeof(SYS_STRUCT)); 
+    memset(&indata,0,sizeof(DATA_IN_STRUCT));
     setpara.run_counts++;
     
     Para2Flash();
@@ -203,19 +253,29 @@ void SysRun()
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
     
-    /****PIDtest****/        
-  pid_test.proportion =    setpara.pid_para.PID_Kp;
-  pid_test.integral =    setpara.pid_para.PID_Ki;
-  pid_test.differential =    setpara.pid_para.PID_Kd;
-  pid_test.delta = 0.4;
-  pid_test.upper_bound = 8399;
-  pid_test.lower_bound = 0;
-  pid_test.err_up_limit  = 1000;
-  pid_test.err_low_limit  = -pid_test.err_up_limit;
-  pid_test.err_up_infinitesimal = 10;
-  pid_test.err_low_infinitesimal = - pid_test.err_up_infinitesimal;
-  pwm_con = 0;
-  dpwm_dt= 0;
+    /****PIDtest****/     
+  memset(&euler_speed,0,sizeof(euler_speed));
+  euler_speed.proportion   =    setpara.pid_para.speed_kp;
+  euler_speed.integral     =    setpara.pid_para.speed_ki;
+  euler_speed.differential =    setpara.pid_para.speed_kd;
+  euler_speed.upper_bound = 2000.0;
+  euler_speed.lower_bound = - euler_speed.upper_bound;
+  euler_speed.err_up_limit = 1000;
+  euler_speed.err_up_infinitesimal = 0.1;
+  euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
+  euler_speed.err_low_limit = - euler_speed.err_up_limit;
+  
+  
+  memset(&speed_pwm,0,sizeof(speed_pwm));
+  speed_pwm.proportion   =    setpara.pid_para.angle_kp;
+  speed_pwm.integral     =    setpara.pid_para.angle_ki;
+  speed_pwm.differential =    setpara.pid_para.angle_kd;
+  speed_pwm.upper_bound = 10000.0;
+  speed_pwm.lower_bound = -speed_pwm.upper_bound;
+  speed_pwm.err_up_limit = 24;
+  speed_pwm.err_up_infinitesimal = 25.0;
+  speed_pwm.err_low_infinitesimal = - speed_pwm.err_up_infinitesimal;
+  speed_pwm.err_low_limit = - speed_pwm.err_up_limit;
   //初始化结束
     /********/
     
@@ -238,8 +298,8 @@ void SysStop()
   sys.sd_write = 0;
   SDFatFsClose();
   LED_SYS_STOP;
-//  char filename[5];
 //  
+//  char filename[5];
 //  sys.osc_suspend = 1;
 //  sprintf(filename,"%d",setpara.run_counts);
 //  SDFatFSRead(strcat(filename,".txt"));
@@ -286,6 +346,8 @@ void CheckKey()
     }
     else if(T-pushtime<5000)  
     {
+      extern uint8_t bImuReady;
+      bImuReady = 0;
       InitOffset6050(&indata.mpu6050,&mpu6050_offset);
     }
     else
