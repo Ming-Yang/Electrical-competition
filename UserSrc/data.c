@@ -125,7 +125,7 @@ void DataProcess()
     else 
       outdata.speed = 0;
     //·ÀÖ¹¹ý×ª
-    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*12)
+    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*4)
     {
 //      outdata.speed = setpara.test2;
       speed_pwm.set_point = outdata.speed;
