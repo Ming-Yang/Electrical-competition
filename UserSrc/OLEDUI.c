@@ -131,14 +131,14 @@ void SendOscilloscope()
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
   
-  printf("%d,",(int)(speed_pwm.set_point)*1);
+  printf("%d,",(int)(speed_pwm.prev_error)*1);
   printf("%d,",(int)(speed_pwm.current_point));
   printf("%d,",(int)(speed_pwm.sum_con));
   
   
-  printf("%d,",(int)(euler_speed.set_point));
-  printf("%d,",(int)(euler_speed.current_point));
-  printf("%d,",(int)(euler_speed.sum_con)/10);
+  printf("%d,",(int)((euler_speed.prev_error - euler_speed.last_error)*100));
+  printf("%d,",(int)(euler_speed.current_point*100));
+  printf("%d,",(int)(euler_speed.sum_con));
   
 //  printf("%d,",indata.mpu6050.acc_x);
 //  printf("%d,",indata.mpu6050.acc_y);
@@ -260,7 +260,7 @@ void SysRun()
   euler_speed.differential =    setpara.pid_para.speed_kd;
   euler_speed.upper_bound = 2000.0;
   euler_speed.lower_bound = - 2000.0;
-  euler_speed.err_up_infinitesimal = 0.5;
+  euler_speed.err_up_infinitesimal = 0;
   euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
   
   memset(&speed_pwm,0,sizeof(speed_pwm));
@@ -275,8 +275,8 @@ void SysRun()
     /********/
     
     while(T - t_last < BUFF_TIME_MS);
-    TIM8->CNT = 0;
-    TIM4->CNT = 0;
+//    TIM8->CNT = 0;
+//    TIM4->CNT = 0;
     LCD_CLS();
     sys.sd_write = 1;
     LED_SYS_RUN;

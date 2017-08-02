@@ -37,6 +37,7 @@ typedef struct
   CHANNEL_STRUCT tim3;
   MPU6050_EULER_STRUCT euler;
   MPU6050_EULER_STRUCT gy25_euler;
+  MPU6050_EULER_STRUCT gy25_euler_last;
   float speed;
   int pwm;
 }DATA_OUT_STRUCT;

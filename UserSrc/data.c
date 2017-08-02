@@ -29,11 +29,11 @@ int32_t roll_acc[10] = {0};
 uint8_t roll_cnt;
 
 //upto 1000lines，10ms,30000rmp
-#define DECODER_LINES   330
+#define DECODER_LINES   256
 #define DECODER_COUNT 10000
 #define MAX_PWM 10000
-#define DECODER_RAW_GRY 0.27272727273f
-#define DECODER2_RAW_GRY 0.36f
+#define DECODER_RAW_GRY 27.27272727273f
+#define DECODER2_RAW_GRY 0.3515625f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                      (data_in):((data_in)-(data_th))
 #define Limit(x,b,a) (x)>(a)?(a):((x)<(b)?(b):(x))
@@ -47,17 +47,20 @@ void DataInput()
   //获得编码器参数
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
-  indata.decoder1.acc_roll = indata.decoder1.raw;
-  indata.decoder2.acc_roll = indata.decoder2.raw;
+  indata.decoder1.acc_roll += indata.decoder1.raw;
+  indata.decoder2.acc_roll += indata.decoder2.raw;
   
-  indata.decoder1.ang_v = indata.decoder1.acc_roll * DECODER_RAW_GRY;
-  indata.decoder2.ang_v = indata.decoder2.acc_roll * DECODER2_RAW_GRY;
+  indata.decoder1.ang_v = indata.decoder1.raw * DECODER_RAW_GRY;
+  indata.decoder2.ang_v = indata.decoder2.raw * DECODER2_RAW_GRY;
   
-//  TIM4->CNT = 0;
+  TIM4->CNT = 0;
 //  TIM8->CNT = 0;
   
-  MPU6050_GetData(&indata.mpu6050);
+//  MPU6050_GetData(&indata.mpu6050);
+  outdata.gy25_euler_last = outdata.gy25_euler;
   GetGY_25(&outdata.gy25_euler);
+  
+  
   
   /****PIDtest****/    
   //获得PID控制参数
@@ -111,24 +114,24 @@ void DataProcess()
     
     
     //new pid!!!!!!!!!!!!!!!!!!!!!!!!    
-    if(fabs(outdata.gy25_euler.roll) < 70.0 )
+    if(fabs(fmod(indata.decoder2.ang_v,360.0)) < 70.0 )
     {
       euler_speed.set_point = setpara.test*0.1f;
-      euler_speed.current_point = outdata.gy25_euler.roll;
+      euler_speed.current_point = fmod(indata.decoder2.ang_v,360.0);
       IncPIDCalc(&euler_speed);
-      outdata.speed = euler_speed.sum_con;
-      if(outdata.gy25_euler.roll > 20)
-        outdata.speed = -2000;
-      if(outdata.gy25_euler.roll < -20)
-        outdata.speed = 2000;
+      outdata.speed = -euler_speed.sum_con;
+//      if(outdata.gy25_euler.roll > 20)
+//        outdata.speed = -2000;
+//      if(outdata.gy25_euler.roll < -20)
+//        outdata.speed = +2000;
       
     }
     else 
       outdata.speed = 0;
     //防止过转
-    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*4)
+    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*12)
     {
-      outdata.speed = setpara.test2;
+//      outdata.speed = setpara.test2;
       speed_pwm.set_point = outdata.speed;
       speed_pwm.current_point = indata.decoder1.ang_v;
       IncPIDCalc(&speed_pwm);
