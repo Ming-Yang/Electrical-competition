@@ -1,4 +1,4 @@
-#include "mpu6050.h"
+#include "mpu6050_process.h"
 
 
 volatile s16 MPU6050_ACC_X=0;

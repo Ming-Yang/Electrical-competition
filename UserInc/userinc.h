@@ -71,7 +71,7 @@ typedef __I uint8_t vuc8;   /*!< Read Only */
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define abs(x) ((x) > 0 ? (x) : -(x))
-
+#define limit(x,b,a) (x)>(a)?(a):((x)<(b)?(b):(x))
 
 
 /*IO port operation macro definition*/

@@ -2,50 +2,51 @@
 #include "OLEDUI.h"
 #include "SDFatfs.h"
 #include "usmart.h"
-#include "mpu6050.h"
 #include "interrupt.h"
-#include "mpu6050_process.h"
+#include "PIDController.h"
 #include "init.h"
 #include "adc.h"
-
-DATA_IN_STRUCT indata;
-MPU6050_PHYSICAL_STRUCT mpu6050_filted;
-MPU6050_PHYSICAL_STRUCT mpu6050_offset={0};
-MPU6050_EULER_STRUCT eulerRad;
+#include "PIDController.h"
 
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
 
 //upto 1000lines，10ms,30000rmp
-#define DECODER_LINES
+#define DECODER_LINES   256
 #define DECODER_COUNT 10000
 #define MAX_PWM 10000
-#define DECODER_RAW_GRY 27.27272727273f
+#define DECODER1_RAW_GRY 27.27272727273f
+#define DECODER2_RAW_GRY 0.3515625f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
-(data_in):((data_in)-(data_th))
+                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
+
+void GetGY_25(MPU6050_EULER_STRUCT*);
 
 void DataInput()
 {
+  //获得两个编码器参数
   indata.decoder1.raw = CheckData(TIM4->CNT,DECODER_COUNT);
-  indata.decoder1.ang_v = indata.decoder1.raw * DECODER_RAW_GRY;
-  TIM4->CNT = 0;
   indata.decoder2.raw = CheckData(TIM8->CNT,DECODER_COUNT);
-  indata.decoder2.ang_v = indata.decoder2.raw * DECODER_RAW_GRY;
-  TIM8->CNT = 0;
-  MPU6050_GetData(&indata.mpu6050);
+  indata.decoder1.acc_roll += indata.decoder1.raw;
+  indata.decoder2.acc_roll += indata.decoder2.raw;
   
-  if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
-  {
-    indata.adc10 = HAL_ADC_GetValue(&hadc1);
-  }
+  indata.decoder1.ang_v = indata.decoder1.raw * DECODER1_RAW_GRY;
+  indata.decoder2.ang_v = indata.decoder2.raw * DECODER2_RAW_GRY;
+  
+  TIM4->CNT = 0;
+  
+  outdata.gy25_euler_last = outdata.gy25_euler;
+  GetGY_25(&outdata.gy25_euler);
+  
+//  if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
+//  {
+//    indata.adc10 = HAL_ADC_GetValue(&hadc1);
+//  }
 }
 
 void DataProcess()
-{
-  //姿态融合
-  MPU6050_Process(&indata.mpu6050, &mpu6050_filted, &mpu6050_offset, &eulerRad, &outdata.euler);
-  
+{  
   if(sys.status == READY)
   {
     outdata.tim2.channel1 = 0 ;
@@ -56,25 +57,33 @@ void DataProcess()
     outdata.tim3.channel2 = 0 ;
     outdata.tim3.channel3 = 0 ;
     outdata.tim3.channel4 = 0 ;
+    outdata.speed = 0;
+    outdata.pwm = 0;
   }
-  else
-  {
+  else if(sys.status == RUNNING)
+  { 
+    switch(setpara.task_num)
+    {
+    case 1:
+      break;
+    case 2:
+      break;
     
-    outdata.tim2.channel1 = MAX_PWM;
-    outdata.tim2.channel2 = MAX_PWM/2;
-    outdata.tim2.channel3 = MAX_PWM/3;
-    outdata.tim2.channel4 = MAX_PWM/4;
-    outdata.tim3.channel1 = MAX_PWM/5;
-    outdata.tim3.channel2 = MAX_PWM/6;
-    outdata.tim3.channel3 = MAX_PWM/7;
-    outdata.tim3.channel4 = MAX_PWM/8;
+    
+    
+    default:
+      break;
+    }
   }
+
 }
 
 void DataOutput()
-{
+{  
+  //开启pwm中断
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
+  //开启按键中断
   HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
@@ -90,4 +99,16 @@ void DataSave()
   
   if(sys.sd_write)
     DataWriteFatfs();
+}
+
+void GetGY_25(MPU6050_EULER_STRUCT *gy25)
+{
+    int a;
+    a= 0x51a5;
+    HAL_UART_Transmit(&huart1,(uint8_t*)&(a),2,0xFFFF);
+    HAL_UART_Receive(&huart1, (uint8_t*)uart1_rx_buff, 8, 0x01);
+    
+    gy25->pitch = ((int16_t)( (uart1_rx_buff[3] << 8) | uart1_rx_buff[4] )) / 100.0f; 
+    gy25->roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
+    gy25->yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
 }

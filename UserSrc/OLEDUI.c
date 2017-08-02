@@ -4,6 +4,7 @@
 #include "flash.h"
 #include "data.h"
 #include "interrupt.h"
+#include "PIDController.h"
 
 #define BUFF_TIME_MS 2000
 #define LED_SYS_RUN     PEout(6)=0
@@ -18,25 +19,31 @@ SYS_STRUCT sys;
 static void ChangePara(char event);
 static void ShowUnder();
 static void SysStop();
+static void SendParaTable(uint8_t mode);
 
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
   &setpara.set_time,
-  &setpara.steer.mid,
-  &setpara.steer.max,
   &setpara.test,
+  &setpara.test2,
+  &setpara.task_num,
+  
+//  &setpara,
   
   {0}
 };
 //parameters to be shown on the screen should be listed here in order
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
+  {&setpara.task_num,"Task",1},
   {&setpara.set_time,"SetTime",1},
-  {&setpara.steer.mid,"SteerMid",1},
-  {&setpara.steer.max,"SteerMax",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
+  {&setpara.test2,"Test2",1},
+
+  
+//  {&setpara,"",1},
   
   {0}
 };
@@ -48,16 +55,13 @@ void DataNameWriteFatfs()
 {
   F_PRINTF_S(sys.T_RUN);
            
-  F_PRINTF_S(indata.mpu6050.acc_x);
-  F_PRINTF_S(indata.mpu6050.acc_y);
-  F_PRINTF_S(indata.mpu6050.acc_z);
-  F_PRINTF_S(indata.mpu6050.gyr_x);
-  F_PRINTF_S(indata.mpu6050.gyr_y);
-  F_PRINTF_S(indata.mpu6050.gyr_z);
-           
-  F_PRINTF_S(outdata.euler.pitch);
-  F_PRINTF_S(outdata.euler.roll);
-  F_PRINTF_S(outdata.euler.yaw);
+  F_PRINTF_S(outdata.gy25_euler.pitch);
+  F_PRINTF_S(outdata.gy25_euler.roll);
+  F_PRINTF_S(outdata.gy25_euler.yaw);
+  
+  F_PRINTF_S(outdata.pwm);
+  F_PRINTF_S(outdata.speed);
+  F_PRINTF_S(indata.decoder1.angle_v);
   
   f_printf(&fil,"\r\n");
 }
@@ -66,32 +70,28 @@ void DataWriteFatfs()
 {
   F_PRINTF_D(sys.T_RUN);
   
-  F_PRINTF_D(indata.mpu6050.acc_x);
-  F_PRINTF_D(indata.mpu6050.acc_y);
-  F_PRINTF_D(indata.mpu6050.acc_z);
-  F_PRINTF_D(indata.mpu6050.gyr_x);
-  F_PRINTF_D(indata.mpu6050.gyr_y);
-  F_PRINTF_D(indata.mpu6050.gyr_z);
+  F_PRINTF_D((int)(100*outdata.gy25_euler.pitch));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
+  F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
   
-  F_PRINTF_D((int)(100*outdata.euler.pitch));
-  F_PRINTF_D((int)(100*outdata.euler.roll));
-  F_PRINTF_D((int)(100*outdata.euler.yaw));
+  F_PRINTF_D(outdata.pwm);
+  F_PRINTF_D((int)(100*outdata.speed));
+  F_PRINTF_D((int)(100*indata.decoder1.ang_v));
   
   f_printf(&fil,"\r\n");
 }
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",indata.mpu6050.acc_x);
-  printf("%d,",indata.mpu6050.acc_y);
-  printf("%d,",indata.mpu6050.acc_z);
-  printf("%d,",indata.mpu6050.gyr_x);
-  printf("%d,",indata.mpu6050.gyr_y);
-  printf("%d,",indata.mpu6050.gyr_z);
+//  printf("%d,",(int)(speed2pwm.prev_error)*1);
+//  printf("%d,",(int)(speed2pwm.current_point));
+//  printf("%d,",(int)(speed2pwm.sum_con));
+//  
+//  
+//  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
+//  printf("%d,",(int)(euler2speed.current_point*100));
+//  printf("%d,",(int)(euler2speed.sum_con));
   
-  printf("%d,",(int)(outdata.euler.roll *100));
-  printf("%d,",(int)(outdata.euler.pitch*100));
-  printf("%d,",(int)(outdata.euler.yaw  *100));  
   printf("\r\n");
 }
 
@@ -107,18 +107,31 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
-    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
-    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,indata.decoder2.ang_v);
+    oledprintf(1,0,"PWM1:%4d,WPM2:%4d",outdata.tim2.channel1,outdata.tim2.channel2);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.gy25_euler.roll,(int)outdata.gy25_euler.pitch,(int)outdata.gy25_euler.yaw);
     oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
     oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
     
   case 1:
+    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
+    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
+    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
   case 2:
+//    oledprintf(0,0,"",);
+//    oledprintf(1,0,"",);
+//    oledprintf(2,0,"",);
+//    oledprintf(3,0,"",);
+//    oledprintf(4,0,"",);
     
     break;
     
@@ -129,7 +142,11 @@ void ShowUpper(int8 page)
 
 void ForceParaChange()
 {
-  
+  for(int i=0;i<oled.para_num;i++)
+  {
+    if(abs(*para_show_table[i].para) > 500000000)
+      *para_show_table[i].para = 0;
+  }
 }
 
 void SysCheck()
@@ -156,7 +173,8 @@ void SysCheck()
   default:break;
   }
 }
-  
+
+
 void SysRun()
 {
   char filename[5] = {0};
@@ -165,6 +183,7 @@ void SysRun()
   if(sys.status == READY)
   {
     memset(&sys,0,sizeof(SYS_STRUCT)); 
+    memset(&indata,0,sizeof(DATA_IN_STRUCT));
     setpara.run_counts++;
     
     Para2Flash();
@@ -172,7 +191,7 @@ void SysRun()
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
-    
+
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
     sys.sd_write = 1;
@@ -190,18 +209,16 @@ void SysStop()
 {
   sys.status = READY;
   sys.sd_write = 0;
+  
+  SendParaTable(0);
+  
   SDFatFsClose();
   LED_SYS_STOP;
-  char filename[5];
-  
-  sys.osc_suspend = 1;
-  sprintf(filename,"%d",setpara.run_counts);
-  SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/
 /*press********确认*************运行****************停止运行**/
-/*push*********改变精度****************************************/
+/*push*********改变精度*********发送参数表*********************/
 /*up***********翻页*************保存参数************使用自定义参数*/
 /*down*********翻页*************发送SD卡*************************/
 /****************************************************************/
@@ -220,7 +237,7 @@ void CheckKey()
     {
       oled.changepara ^= 1;  
     }
-    else if(T-pushtime<5000)
+    else if(T-pushtime<2000)
     {
       SysRun();
     }
@@ -238,9 +255,9 @@ void CheckKey()
       if(oled.precision == 1000)
         oled.precision = 1;
     }
-    else if(T-pushtime<5000)  
+    else if(T-pushtime<2000)  
     {
-      InitOffset6050(&indata.mpu6050,&mpu6050_offset);
+      SendParaTable(1);
     }
     else
     {
@@ -301,9 +318,12 @@ void CheckKey()
       if(sys.status == READY)
       {
         char filename[5] = {0};
+        LCD_CLS();
+        oledprintf(3,3,"Sending SD");
         sys.osc_suspend = 1;
         sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
+        LCD_CLS();
       }
     }
     else
@@ -444,6 +464,17 @@ void Para2Flash()
   printf("flash save finish!\r\n");
   delay_ms(100);
   LCD_CLS();
+}
+
+void SendParaTable(uint8_t mode)
+{
+  for(int i=0;i<oled.para_num;i++)
+  {
+    if(mode)
+      printf("%s = %d\r\n",para_show_table[i].label, *(para_show_table[i].para));
+    else
+      f_printf(&fil, "%s = %d;\r\n",para_show_table[i].label, *(para_show_table[i].para));
+  }
 }
 
 void UIInit()

@@ -2,10 +2,13 @@
 #define _DATA_H
 #include "userinc.h"
 #include "mpu6050_process.h"
+#include "PIDController.h"
 
 typedef struct 
 {
   int32_t raw;
+  int32_t acc_roll;
+  uint16_t lines;
   float ang_v;
   float line_v;
 }DECODER_STRUCT;
@@ -31,7 +34,10 @@ typedef struct
   CHANNEL_STRUCT tim2;
   CHANNEL_STRUCT tim3;
   MPU6050_EULER_STRUCT euler;
-  
+  MPU6050_EULER_STRUCT gy25_euler;
+  MPU6050_EULER_STRUCT gy25_euler_last;
+  float speed;
+  int pwm;
 }DATA_OUT_STRUCT;
 
 
@@ -44,7 +50,6 @@ void DataSave();
 void DataOutput();
 void DataNoPut();
 void DataProcess();
-
 
 
 #endif
