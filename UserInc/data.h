@@ -2,9 +2,7 @@
 #define _DATA_H
 #include "userinc.h"
 #include "mpu6050_process.h"
-
-    /****PIDtest****/  
- extern int pwmccc, dpwm_dt;  
+#include "PIDController.h"
 
 typedef struct 
 {
@@ -46,13 +44,14 @@ typedef struct
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
 extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+extern PID euler2speed;
+extern PID speed2pwm;
 
 void DataInput();
 void DataSave();
 void DataOutput();
 void DataNoPut();
 void DataProcess();
-
 
 
 #endif

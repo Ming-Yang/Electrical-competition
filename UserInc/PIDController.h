@@ -1,5 +1,7 @@
 #ifndef __PIDBASIC_H
 #define __PIDBASIC_H
+#include "userinc.h"
+#include "OLEDUI.h"
 typedef struct PIDs
 {
         float set_point;
@@ -22,5 +24,8 @@ typedef struct PIDs
 #define PIDLowPassFilter 0
 #define PIDBound 1
 #define PIDDeadZone 1
+
 void IncPIDCalc(PID * pid_ptr);
+void GetPIDPara(PID * pid, PID_PARA_STRUCT *para);
+void ClearPIDCach(PID *pid);
 #endif /*__PIDBASIC_H*/

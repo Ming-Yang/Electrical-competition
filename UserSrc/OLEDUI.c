@@ -4,11 +4,7 @@
 #include "flash.h"
 #include "data.h"
 #include "interrupt.h"
-/****PIDtest****/  
 #include "PIDController.h"
-PID euler_speed ;
-PID speed_pwm;
-/****\PIDtest****/  
 
 #define BUFF_TIME_MS 2000
 #define LED_SYS_RUN     PEout(6)=0
@@ -23,13 +19,12 @@ SYS_STRUCT sys;
 static void ChangePara(char event);
 static void ShowUnder();
 static void SysStop();
+static void SendParaTable(uint8_t mode);
 
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
   &setpara.set_time,
-  &setpara.steer.mid,
-  &setpara.steer.max,
   &setpara.test,
   &setpara.test2,
   &setpara.speed_pid.kp,
@@ -38,12 +33,7 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.angle_pid.kp,
   &setpara.angle_pid.ki,
   &setpara.angle_pid.kd,
-  &setpara.pid_para.speed_kp,
-  &setpara.pid_para.speed_ki,
-  &setpara.pid_para.speed_kd,
-  &setpara.pid_para.angle_kp,
-  &setpara.pid_para.angle_ki,
-  &setpara.pid_para.angle_kd,
+  &setpara.task_num,
   
 //  &setpara,
   
@@ -52,6 +42,7 @@ int32_t* para_table[MAX_PARA_SIZE]={
 //parameters to be shown on the screen should be listed here in order
 PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=      
 {
+  {&setpara.task_num,"Task",1},
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
@@ -62,12 +53,7 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.angle_pid.kp,"Pangle",1},
   {&setpara.angle_pid.ki,"Iangle",1},
   {&setpara.angle_pid.kd,"Dangle",1},
-  {&setpara.pid_para.speed_kp,"Pspeed",1},
-  {&setpara.pid_para.speed_ki,"Ispeed",1},
-  {&setpara.pid_para.speed_kd,"Dspeed",1},
-  {&setpara.pid_para.angle_kp,"Pangle",1},
-  {&setpara.pid_para.angle_ki,"Iangle",1},
-  {&setpara.pid_para.angle_kd,"Dangle",1},
+
   
 //  {&setpara,"",1},
   
@@ -131,30 +117,15 @@ void SendOscilloscope()
 //  printf("%d,",(int)(outdata.euler.yaw  *100));  
 //  printf("\r\n");
   
-  printf("%d,",(int)(speed_pwm.prev_error)*1);
-  printf("%d,",(int)(speed_pwm.current_point));
-  printf("%d,",(int)(speed_pwm.sum_con));
+  printf("%d,",(int)(speed2pwm.prev_error)*1);
+  printf("%d,",(int)(speed2pwm.current_point));
+  printf("%d,",(int)(speed2pwm.sum_con));
   
   
-  printf("%d,",(int)((euler_speed.prev_error - euler_speed.last_error)*100));
-  printf("%d,",(int)(euler_speed.current_point*100));
-  printf("%d,",(int)(euler_speed.sum_con));
+  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
+  printf("%d,",(int)(euler2speed.current_point*100));
+  printf("%d,",(int)(euler2speed.sum_con));
   
-//  printf("%d,",indata.mpu6050.acc_x);
-//  printf("%d,",indata.mpu6050.acc_y);
-//  printf("%d,",indata.mpu6050.acc_z);
-//  printf("%d,",indata.mpu6050.gyr_x);
-//  printf("%d,",indata.mpu6050.gyr_y);
-//  printf("%d,",pid_test.current_point);
-//  printf("%d,",pid_test.set_point); 
-//  printf("%d,",(int)pid_test.last_con);
-//  printf("%d,",(int)(pid_test.proportion  ));
-//  printf("%d,",(int)(pid_test.integral    ));
-//  printf("%d,",(int)(pid_test.differential));
-//  printf("%d,",0);   
-//  printf("%d,",pwm_con);
-//  printf("%d,",pid_test.last_error);
-//  printf("%d,",indata.mpu6050.gyr_z);
   
 
   printf("\r\n");
@@ -207,7 +178,11 @@ void ShowUpper(int8 page)
 
 void ForceParaChange()
 {
-  
+  for(int i=0;i<oled.para_num;i++)
+  {
+    if(abs(*para_show_table[i].para) > 500000000)
+      *para_show_table[i].para = 0;
+  }
 }
 
 void SysCheck()
@@ -253,30 +228,10 @@ void SysRun()
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
     
-    /****PIDtest****/     
-  memset(&euler_speed,0,sizeof(euler_speed));
-  euler_speed.proportion   =    setpara.pid_para.speed_kp;
-  euler_speed.integral     =    setpara.pid_para.speed_ki;
-  euler_speed.differential =    setpara.pid_para.speed_kd;
-  euler_speed.upper_bound = 2000.0;
-  euler_speed.lower_bound = - 2000.0;
-  euler_speed.err_up_infinitesimal = 0;
-  euler_speed.err_low_infinitesimal = - euler_speed.err_up_infinitesimal;
-  
-  memset(&speed_pwm,0,sizeof(speed_pwm));
-  speed_pwm.proportion   =    setpara.pid_para.angle_kp;
-  speed_pwm.integral     =    setpara.pid_para.angle_ki;
-  speed_pwm.differential =    setpara.pid_para.angle_kd;
-  speed_pwm.upper_bound = 10000.0;
-  speed_pwm.lower_bound = -10000.0;
-  speed_pwm.err_up_infinitesimal = 25.0;
-  speed_pwm.err_low_infinitesimal = - speed_pwm.err_up_infinitesimal;
-  //初始化结束
-    /********/
-    
+    ClearPIDCach(&speed2pwm);
+    ClearPIDCach(&euler2speed);
+
     while(T - t_last < BUFF_TIME_MS);
-//    TIM8->CNT = 0;
-//    TIM4->CNT = 0;
     LCD_CLS();
     sys.sd_write = 1;
     LED_SYS_RUN;
@@ -293,18 +248,16 @@ void SysStop()
 {
   sys.status = READY;
   sys.sd_write = 0;
+  
+  SendParaTable(0);
+  
   SDFatFsClose();
   LED_SYS_STOP;
-//  
-//  char filename[5];
-//  sys.osc_suspend = 1;
-//  sprintf(filename,"%d",setpara.run_counts);
-//  SDFatFSRead(strcat(filename,".txt"));
 }
 
 /*************short*************long****************pro_long***/
 /*press********确认*************运行****************停止运行**/
-/*push*********改变精度****************************************/
+/*push*********改变精度*********发送参数表*********************/
 /*up***********翻页*************保存参数************使用自定义参数*/
 /*down*********翻页*************发送SD卡*************************/
 /****************************************************************/
@@ -323,7 +276,7 @@ void CheckKey()
     {
       oled.changepara ^= 1;  
     }
-    else if(T-pushtime<5000)
+    else if(T-pushtime<2000)
     {
       SysRun();
     }
@@ -341,11 +294,9 @@ void CheckKey()
       if(oled.precision == 1000)
         oled.precision = 1;
     }
-    else if(T-pushtime<5000)  
+    else if(T-pushtime<2000)  
     {
-      extern uint8_t bImuReady;
-      bImuReady = 0;
-      InitOffset6050(&indata.mpu6050,&mpu6050_offset);
+      SendParaTable(1);
     }
     else
     {
@@ -406,9 +357,12 @@ void CheckKey()
       if(sys.status == READY)
       {
         char filename[5] = {0};
+        LCD_CLS();
+        oledprintf(3,3,"Sending SD");
         sys.osc_suspend = 1;
         sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
+        LCD_CLS();
       }
     }
     else
@@ -549,6 +503,17 @@ void Para2Flash()
   printf("flash save finish!\r\n");
   delay_ms(100);
   LCD_CLS();
+}
+
+void SendParaTable(uint8_t mode)
+{
+  for(int i=0;i<oled.para_num;i++)
+  {
+    if(mode)
+      printf("%s = %d\r\n",para_show_table[i].label, *(para_show_table[i].para));
+    else
+      f_printf(&fil, "%s = %d;\r\n",para_show_table[i].label, *(para_show_table[i].para));
+  }
 }
 
 void UIInit()

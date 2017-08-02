@@ -1,4 +1,5 @@
 #include "PIDController.h"
+#include "OLEDUI.h"
 
 void IncPIDCalc(PID * pid_ptr)
 {
@@ -44,4 +45,21 @@ void IncPIDCalc(PID * pid_ptr)
 #endif //PIDBound
 
         return;
+}
+
+void GetPIDPara(PID * pid, PID_PARA_STRUCT *para)
+{
+  pid->upper_bound = para->bound;
+  pid->lower_bound = -para->bound;
+  pid->err_up_infinitesimal = para->death;
+  pid->err_low_infinitesimal = - para->death;
+  
+  pid->proportion   = para->kp;
+  pid->integral     = para->ki;
+  pid->differential = para->kd;
+}
+
+void ClearPIDCach(PID *pid)
+{
+  memset(pid,0,sizeof(PID));
 }

@@ -2,7 +2,7 @@
 #define _MPU6050_PROCESS_H_
 #include "mpu6050.h"
 
-#define CONSTANTS_ONE_G					9.80665f		/* m/s^2		*/
+#define CONSTANTS_ONE_G		9.80665f		/* m/s^2		*/
 #define M_PI_F 3.1415926
 
 typedef struct

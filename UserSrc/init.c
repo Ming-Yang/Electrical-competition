@@ -6,8 +6,6 @@
 #include "oled.h"
 #include "SDFatfs.h"
 #include "OLEDUI.h"
-#include "mpu6050.h"
-#include "mpu6050_process.h"
 #include "adc.h"
 
 void TimInit()
@@ -17,8 +15,11 @@ void TimInit()
 
 void InputDecoder()
 {
+  //tim4-------------->电机编码器
+  //tim8-------------->角度编码器
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_ALL);
+  //初始化角度传感器0°
   TIM8->CNT = 512;
 }
 
@@ -51,7 +52,6 @@ void PWMStop()
 void UartInit()
 {
   HAL_UART_Receive_IT(&huart2, (uint8_t*)uart2_rx_buff, 1);
-//  HAL_UART_Receive(&huart1, (uint8_t*)uart1_rx_buff, 8);
 }
 
 void GpioInit()
@@ -72,9 +72,6 @@ void InitAll()
   
   FlashInit();
   SDFatFSInit();
-  
-  printf("mpu6050 id:0x%x\r\n",MPU6050_Init());
-  IMU_Init();
   
   UIInit();
   sys.status = READY;
