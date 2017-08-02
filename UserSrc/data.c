@@ -9,14 +9,7 @@
 #include "PIDController.h"
 
 DATA_IN_STRUCT indata;
-MPU6050_PHYSICAL_STRUCT mpu6050_filted;
-MPU6050_PHYSICAL_STRUCT mpu6050_offset={0};
-MPU6050_EULER_STRUCT eulerRad;
-
-DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
-PID euler2speed;
-PID speed2pwm;
 
 //upto 1000lines£¬10ms,30000rmp
 #define DECODER_LINES   256
@@ -26,7 +19,6 @@ PID speed2pwm;
 #define DECODER2_RAW_GRY 0.3515625f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                      (data_in):((data_in)-(data_th))
-#define Limit(x,b,a) (x)>(a)?(a):((x)<(b)?(b):(x))
 #define OCS_PIN PEin(12) 
 
 void GetGY_25(MPU6050_EULER_STRUCT*);
@@ -68,36 +60,19 @@ void DataProcess()
     outdata.speed = 0;
     outdata.pwm = 0;
   }
-  else
+  else if(sys.status == RUNNING)
   { 
-    if(fabs(fmod(indata.decoder2.ang_v,360.0)) < 70.0 )
+    switch(setpara.task_num)
     {
-      euler2speed.set_point = setpara.test*0.1f;
-      euler2speed.current_point = fmod(indata.decoder2.ang_v,360.0);
-      IncPIDCalc(&euler2speed);
-      outdata.speed = -euler2speed.sum_con;
-    }
-    else 
-      outdata.speed = 0;
-    //·ÀÖ¹¹ý×ª
-    if(abs(indata.decoder1.acc_roll) < DECODER_LINES*12)
-    {
-      speed2pwm.set_point = outdata.speed;
-      speed2pwm.current_point = indata.decoder1.ang_v;
-      IncPIDCalc(&speed2pwm);
-      outdata.pwm = (int)speed2pwm.sum_con;
-    }
-    else
-      outdata.pwm = 0;
-    if (outdata.pwm > 0)
-    {
-      outdata.tim2.channel1 = outdata.pwm;
-      outdata.tim2.channel2 = 0;
-    }
-    else
-    {
-      outdata.tim2.channel1 = 0;
-      outdata.tim2.channel2 = -outdata.pwm;
+    case 1:
+      break;
+    case 2:
+      break;
+    
+    
+    
+    default:
+      break;
     }
   }
 

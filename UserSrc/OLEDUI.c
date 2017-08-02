@@ -27,12 +27,6 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.set_time,
   &setpara.test,
   &setpara.test2,
-  &setpara.speed_pid.kp,
-  &setpara.speed_pid.ki,
-  &setpara.speed_pid.kd,
-  &setpara.angle_pid.kp,
-  &setpara.angle_pid.ki,
-  &setpara.angle_pid.kd,
   &setpara.task_num,
   
 //  &setpara,
@@ -47,12 +41,6 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.run_counts,"Counts",1},
   {&setpara.test,"Test",1},
   {&setpara.test2,"Test2",1},
-  {&setpara.speed_pid.kp,"Pspeed",1},
-  {&setpara.speed_pid.ki,"Ispeed",1},
-  {&setpara.speed_pid.kd,"Dspeed",1},
-  {&setpara.angle_pid.kp,"Pangle",1},
-  {&setpara.angle_pid.ki,"Iangle",1},
-  {&setpara.angle_pid.kd,"Dangle",1},
 
   
 //  {&setpara,"",1},
@@ -66,13 +54,6 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
 void DataNameWriteFatfs()
 {
   F_PRINTF_S(sys.T_RUN);
-           
-  F_PRINTF_S(indata.mpu6050.acc_x);
-  F_PRINTF_S(indata.mpu6050.acc_y);
-  F_PRINTF_S(indata.mpu6050.acc_z);
-  F_PRINTF_S(indata.mpu6050.gyr_x);
-  F_PRINTF_S(indata.mpu6050.gyr_y);
-  F_PRINTF_S(indata.mpu6050.gyr_z);
            
   F_PRINTF_S(outdata.gy25_euler.pitch);
   F_PRINTF_S(outdata.gy25_euler.roll);
@@ -89,13 +70,6 @@ void DataWriteFatfs()
 {
   F_PRINTF_D(sys.T_RUN);
   
-  F_PRINTF_D(indata.mpu6050.acc_x);
-  F_PRINTF_D(indata.mpu6050.acc_y);
-  F_PRINTF_D(indata.mpu6050.acc_z);
-  F_PRINTF_D(indata.mpu6050.gyr_x);
-  F_PRINTF_D(indata.mpu6050.gyr_y);
-  F_PRINTF_D(indata.mpu6050.gyr_z);
-  
   F_PRINTF_D((int)(100*outdata.gy25_euler.pitch));
   F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
   F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
@@ -109,25 +83,15 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-//  printf("%d,",(int)(outdata.speed*10));
-//  printf("%d,",outdata.pwm);
+//  printf("%d,",(int)(speed2pwm.prev_error)*1);
+//  printf("%d,",(int)(speed2pwm.current_point));
+//  printf("%d,",(int)(speed2pwm.sum_con));
+//  
+//  
+//  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
+//  printf("%d,",(int)(euler2speed.current_point*100));
+//  printf("%d,",(int)(euler2speed.sum_con));
   
-//  printf("%d,",(int)(outdata.euler.roll *100));
-//  printf("%d,",(int)(outdata.euler.pitch*100));
-//  printf("%d,",(int)(outdata.euler.yaw  *100));  
-//  printf("\r\n");
-  
-  printf("%d,",(int)(speed2pwm.prev_error)*1);
-  printf("%d,",(int)(speed2pwm.current_point));
-  printf("%d,",(int)(speed2pwm.sum_con));
-  
-  
-  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
-  printf("%d,",(int)(euler2speed.current_point*100));
-  printf("%d,",(int)(euler2speed.sum_con));
-  
-  
-
   printf("\r\n");
 }
 
@@ -227,9 +191,6 @@ void SysRun()
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
-    
-    ClearPIDCach(&speed2pwm);
-    ClearPIDCach(&euler2speed);
 
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
