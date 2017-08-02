@@ -74,7 +74,7 @@ void DataWriteFatfs()
   F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
   F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
   
-  F_PRINTF_D(outdata.pwm);
+//  F_PRINTF_D(outdata.pwm);
   F_PRINTF_D((int)(100*outdata.speed));
   F_PRINTF_D((int)(100*indata.decoder1.ang_v));
   

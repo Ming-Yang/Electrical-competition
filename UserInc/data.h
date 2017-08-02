@@ -37,7 +37,8 @@ typedef struct
   MPU6050_EULER_STRUCT gy25_euler;
   MPU6050_EULER_STRUCT gy25_euler_last;
   float speed;
-  int pwm;
+  int pwm_x;
+  int pwm_y;
 }DATA_OUT_STRUCT;
 
 
