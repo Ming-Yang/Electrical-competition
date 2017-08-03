@@ -69,13 +69,13 @@ void InitAll()
   PWMStart();
   InputDecoder();
   UartInit();
+  HAL_ADC_Start(&hadc1);
   
   FlashInit();
   SDFatFSInit();
   
   UIInit();
   sys.status = READY;
-  HAL_ADC_Start(&hadc1);
   printf("init finish!\r\n");
   __enable_irq();
 }

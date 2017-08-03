@@ -16,6 +16,9 @@ typedef struct
 typedef struct 
 {
   MPU6050_DATA_STRUCT mpu6050;
+  MPU6050_EULER_STRUCT gy25_euler;
+  MPU6050_EULER_STRUCT gy25_euler_last;
+  MPU6050_EULER_STRUCT global_euler;
   DECODER_STRUCT decoder1;
   DECODER_STRUCT decoder2;
   int16_t adc10;
@@ -34,8 +37,6 @@ typedef struct
   CHANNEL_STRUCT tim2;
   CHANNEL_STRUCT tim3;
   MPU6050_EULER_STRUCT euler;
-  MPU6050_EULER_STRUCT gy25_euler;
-  MPU6050_EULER_STRUCT gy25_euler_last;
   float speed;
   int pwm_x;
   int pwm_y;
@@ -45,6 +46,10 @@ typedef struct
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
 extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+extern PID axis_x;
+extern PID axis_y;
+extern PID axis_x_error;
+extern PID axis_y_error;
 
 void DataInput();
 void DataSave();

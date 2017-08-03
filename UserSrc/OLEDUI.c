@@ -6,7 +6,7 @@
 #include "interrupt.h"
 #include "PIDController.h"
 
-#define BUFF_TIME_MS 2000
+#define BUFF_TIME_MS 1000
 #define LED_SYS_RUN     PEout(6)=0
 #define LED_SYS_STOP    PEout(6)=1
 
@@ -20,13 +20,39 @@ static void ChangePara(char event);
 static void ShowUnder();
 static void SysStop();
 static void SendParaTable(uint8_t mode);
+extern void SysRun();
 
 //parameters to be saved in flash should be listed here in order
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
   &setpara.set_time,
-  &setpara.test,
-  &setpara.test2,
+  &setpara.test_x,
+  &setpara.test_y,
+  
+  &setpara.x_pid.kp,
+  &setpara.x_pid.ki,
+  &setpara.x_pid.kd,
+  &setpara.x_pid.bound,
+  &setpara.x_pid.death,
+  
+  &setpara.y_pid.kp,
+  &setpara.y_pid.ki,
+  &setpara.y_pid.kd,
+  &setpara.y_pid.bound,
+  &setpara.y_pid.death,
+  
+  &setpara.x_error_pid.kp,
+  &setpara.x_error_pid.ki,
+  &setpara.x_error_pid.kd,
+  &setpara.x_error_pid.bound,
+  &setpara.x_error_pid.death,
+             
+  &setpara.y_error_pid.kp,
+  &setpara.y_error_pid.ki,
+  &setpara.y_error_pid.kd,
+  &setpara.y_error_pid.bound,
+  &setpara.y_error_pid.death,
+  
   &setpara.task_num,
   
 //  &setpara,
@@ -39,8 +65,25 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.task_num,"Task",1},
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
-  {&setpara.test,"Test",1},
-  {&setpara.test2,"Test2",1},
+  
+  {&setpara.test_x,"x",1},
+  {&setpara.test_y,"y",1},
+  
+  {&setpara.x_pid.kp,"x_P",1},
+  {&setpara.x_pid.ki,"x_I",1},
+  {&setpara.x_pid.kd,"x_D",1},
+             
+  {&setpara.y_pid.kp,"y_P",1},
+  {&setpara.y_pid.ki,"y_I",1},
+  {&setpara.y_pid.kd,"y_D",1},
+
+  {&setpara.x_error_pid.kp,"x_EP",1},
+  {&setpara.x_error_pid.ki,"x_EI",1},
+  {&setpara.x_error_pid.kd,"x_ED",1},
+             
+  {&setpara.y_error_pid.kp,"y_EP",1},
+  {&setpara.y_error_pid.ki,"y_EI",1},
+  {&setpara.y_error_pid.kd,"y_ED",1},
 
   
 //  {&setpara,"",1},
@@ -70,9 +113,9 @@ void DataWriteFatfs()
 {
   F_PRINTF_D(sys.T_RUN);
   
-  F_PRINTF_D((int)(100*outdata.gy25_euler.pitch));
-  F_PRINTF_D((int)(100*outdata.gy25_euler.roll));
-  F_PRINTF_D((int)(100*outdata.gy25_euler.yaw));
+  F_PRINTF_D((int)(100*indata.gy25_euler.pitch));
+  F_PRINTF_D((int)(100*indata.gy25_euler.roll));
+  F_PRINTF_D((int)(100*indata.gy25_euler.yaw));
   
 //  F_PRINTF_D(outdata.pwm);
   F_PRINTF_D((int)(100*outdata.speed));
@@ -83,9 +126,13 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-//  printf("%d,",(int)(speed2pwm.prev_error)*1);
-//  printf("%d,",(int)(speed2pwm.current_point));
-//  printf("%d,",(int)(speed2pwm.sum_con));
+  printf("%d,",(int)((axis_x.current_point)*100));
+  printf("%d,",(int)((int)axis_x.sum_con));
+  printf("%d,",(int)((axis_x.set_point)*100));
+  
+  printf("%d,",(int)((axis_x_error.current_point)*100));
+  printf("%d,",(int)((int)axis_x_error.sum_con));
+  printf("%d,",(int)((axis_x_error.set_point)*100));
 //  
 //  
 //  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
@@ -107,10 +154,10 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"g1:%3.2f,s:%3.2f",indata.decoder1.ang_v,indata.decoder2.ang_v);
-    oledprintf(1,0,"PWM1:%4d,WPM2:%4d",outdata.tim2.channel1,outdata.tim2.channel2);
-    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.gy25_euler.roll,(int)outdata.gy25_euler.pitch,(int)outdata.gy25_euler.yaw);
-    oledprintf(3,0,"c1:%6d,c2:%6d",indata.decoder1.raw,indata.decoder2.raw);
+    oledprintf(0,0,"G:%4.2fE:%4.2f",indata.global_euler.roll,indata.gy25_euler.roll);
+    oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
+    oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
+    oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
     oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
     
@@ -153,7 +200,8 @@ void SysCheck()
 {
   switch(sys.status)
   {
-  case READY:break;
+  case READY:
+    break;
   case RUNNING:
     sys.T_RUN += T_PERIOD_MS;
     if(sys.T_RUN >= setpara.set_time*100 || 
@@ -186,6 +234,9 @@ void SysRun()
     memset(&indata,0,sizeof(DATA_IN_STRUCT));
     setpara.run_counts++;
     
+    ClearPIDCach(&axis_x);
+    ClearPIDCach(&axis_y);
+    
     Para2Flash();
     
     sprintf(filename,"%d",setpara.run_counts);
@@ -197,7 +248,6 @@ void SysRun()
     sys.sd_write = 1;
     LED_SYS_RUN;
     sys.status = RUNNING;
-    DataOutput();
   }
   else
   {
@@ -207,6 +257,7 @@ void SysRun()
 
 void SysStop()
 {
+  sys.force_stop = 0;
   sys.status = READY;
   sys.sd_write = 0;
   
@@ -227,7 +278,7 @@ void CheckKey()
   uint32_t pushtime = T;
   
   if(button==PRESS||button==PUSH)
-    OLED_Init();        
+    OLED_Init();
   
   switch(button)
   {

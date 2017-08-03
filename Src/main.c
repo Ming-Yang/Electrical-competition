@@ -115,7 +115,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   
   InitAll();
-//  SysRun();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -125,15 +124,15 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-//    static uint32_t temp_T = 0;
+
     OledShow();
     CheckKey();
-//    if(T > temp_T)
-//    {
-//
-//      DataSave();
-//      temp_T = T;
-//    }
+    if(sys.force_start == 1)
+    {
+      sys.force_start = 0;
+      SysRun();
+    }
+    
   }
   /* USER CODE END 3 */
 

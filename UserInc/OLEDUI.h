@@ -25,11 +25,16 @@ typedef struct
   int32_t run_counts;
   int32_t set_time;
   
-  int32_t test;
-  int32_t test2;
+  int32_t test_x;
+  int32_t test_y;
+  int32_t acc_x;
+  int32_t acc_y;
   
-  PID_PARA_STRUCT angle_pid;
-  PID_PARA_STRUCT speed_pid;
+  PID_PARA_STRUCT x_pid;
+  PID_PARA_STRUCT y_pid;
+  
+  PID_PARA_STRUCT x_error_pid;
+  PID_PARA_STRUCT y_error_pid;
   
 }PARA_LIST_STRUCT;
 
@@ -48,6 +53,7 @@ typedef struct
   uint8_t osc_suspend;
   uint8_t sd_write;
   uint8_t force_stop;
+  uint8_t force_start;
 }SYS_STRUCT; 
 
 typedef enum
