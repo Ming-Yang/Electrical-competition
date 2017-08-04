@@ -10,6 +10,7 @@
 #define PUSH_IN         PBin(10)
 #define PRESS_IN        PBin(12)
 #define DIRECTION_IN    PBin(14)
+
 typedef  struct 
 { 
   int32_t kp;

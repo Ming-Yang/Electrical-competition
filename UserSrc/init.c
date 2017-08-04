@@ -7,6 +7,9 @@
 #include "SDFatfs.h"
 #include "OLEDUI.h"
 #include "adc.h"
+#include "data.h"
+
+#define ERROR_YAW 2.204615824775566f
 
 void TimInit()
 {
@@ -22,6 +25,30 @@ void InputDecoder()
   //初始化角度传感器0°
   TIM8->CNT = 512;
 }
+
+void RotReverseInit(ROT_MATRIX* r, float a, float b, float c)
+{
+  a *= DEG_TO_RAD;
+  b *= DEG_TO_RAD*0.8;
+  c *= DEG_TO_RAD*1.005;
+  r->r[0] = cos(c)*cos(a) - sin(c)*sin(a)*sin(b);
+  r->r[1] = sin(a)*cos(b);
+  r->r[2] = sin(c)*cos(a) + cos(c)*sin(a)*sin(b);
+  r->r[3] =-sin(a)*cos(c) - sin(c)*cos(a)*sin(b);
+  r->r[4] = cos(a)*cos(b);
+  r->r[5] =-sin(c)*sin(a) + cos(c)*cos(a)*sin(b);
+  r->r[6] =-sin(c)*cos(b);
+  r->r[7] =-sin(b);
+  r->r[8] = cos(c)*cos(b);  
+  
+}
+
+void Gy25ErrInit ()
+{
+  GetGY_25(&indata.gy25_euler);
+  RotReverseInit(&err_rot_matrix, ERROR_YAW, indata.gy25_euler.pitch, indata.gy25_euler.roll);
+}
+
 
 void PWMStart()
 {
@@ -75,6 +102,7 @@ void InitAll()
   SDFatFSInit();
   
   UIInit();
+  Gy25ErrInit();
   sys.status = READY;
   printf("init finish!\r\n");
   __enable_irq();

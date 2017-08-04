@@ -42,6 +42,17 @@ typedef struct
   int pwm_y;
 }DATA_OUT_STRUCT;
 
+typedef struct 
+{
+  float r[9];
+}ROT_MATRIX;
+
+typedef struct 
+{
+  float x;
+  float y;
+  float z;
+}POSITION;
 
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
@@ -50,12 +61,16 @@ extern PID axis_x;
 extern PID axis_y;
 extern PID axis_x_error;
 extern PID axis_y_error;
+extern ROT_MATRIX err_rot_matrix;
+extern ROT_MATRIX mea_rot_matrix;
+extern POSITION pendulum_pos;
 
 void DataInput();
 void DataSave();
 void DataOutput();
 void DataNoPut();
 void DataProcess();
+void GetGY_25(MPU6050_EULER_STRUCT*);
 
 
 #endif

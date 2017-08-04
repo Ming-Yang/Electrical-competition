@@ -44,4 +44,19 @@ extern void InitOffset6050(MPU6050_DATA_STRUCT* MPU6050_DATA,
                     );
   
 
+static float invSqrt(float number)
+{
+    volatile long i;
+    volatile float x, y;
+    volatile const float f = 1.5F;
+
+    x = number * 0.5F;
+    y = number;
+    i = * (( long * ) &y);
+    i = 0x5f375a86 - ( i >> 1 );
+    y = * (( float * ) &i);
+    y = y * ( f - ( x * y * y ) );
+    return y;
+}
+
 #endif /* _MPU6050_PROCESS_H_ */

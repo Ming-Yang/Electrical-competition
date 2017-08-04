@@ -6,7 +6,6 @@
 #include "PIDController.h"
 #include "init.h"
 #include "adc.h"
-#include "PIDController.h"
 
 //upto 1000lines，10ms,30000rmp
 #define DECODER_LINES   256
@@ -19,6 +18,9 @@
                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
                                       
+#define ERROR_YAW 2.204615824775566f
+#define STICK_LENGTH 52
+                                      
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
 
@@ -28,7 +30,11 @@ PID axis_y;
 PID axis_x_error;
 PID axis_y_error;
 
-static void GetGY_25(MPU6050_EULER_STRUCT*);
+ROT_MATRIX err_rot_matrix;
+ROT_MATRIX mea_rot_matrix;
+POSITION pendulum_pos;
+
+static void AngleCalibrate(MPU6050_EULER_STRUCT * e, POSITION * p);
 
 void DataInput()
 {
@@ -45,6 +51,10 @@ void DataInput()
   
   indata.gy25_euler_last = indata.gy25_euler;
   GetGY_25(&indata.gy25_euler);
+  AngleCalibrate(&indata.gy25_euler, &pendulum_pos);
+  indata.global_euler.roll = pendulum_pos.x;
+  indata.global_euler.pitch = pendulum_pos.y;
+  indata.global_euler.yaw = pendulum_pos.z;
   
   //  if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
   //  {
@@ -189,3 +199,51 @@ void GetGY_25(MPU6050_EULER_STRUCT *gy25)
   gy25->roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
   gy25->yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
 }
+
+
+
+/*******Global通过初始化的误差角和实际测量的欧拉角算坐标******/
+void RotInit(ROT_MATRIX* r, float a, float b, float c)
+{
+  a *= -DEG_TO_RAD;
+  b *= -DEG_TO_RAD;
+  c *= -DEG_TO_RAD;
+  r->r[0] = cos(c)*cos(a) - sin(c)*sin(a)*sin(b);
+  r->r[1] =-sin(a)*cos(c) - sin(c)*cos(a)*sin(b);
+  r->r[2] =-sin(c)*cos(b);
+  r->r[3] = sin(a)*cos(b);
+  r->r[4] = cos(a)*cos(b);
+  r->r[5] =-sin(b);
+  r->r[6] = sin(c)*cos(a) + cos(c)*sin(a)*sin(b);
+  r->r[7] =-sin(c)*sin(a) + cos(c)*cos(a)*sin(b);
+  r->r[8] = cos(c)*cos(b);  
+}
+
+
+void RotCoordinate(ROT_MATRIX* error, ROT_MATRIX* measure, POSITION* p)
+{
+  int j;
+  float norm;
+  p->x = 0;
+  p->y = 0;
+  p->z = 0;
+  for (j = 0; j < 3; j++)
+  {
+       p->x += measure->r[j]   * error->r[j+6];
+       p->y += measure->r[3+j] * error->r[j+6];
+       p->z += measure->r[6+j] * error->r[j+6];
+  }   
+  norm = 52 * invSqrt(p->x * p->x + p->y * p->y + p->z * p->z);
+  float temp;
+  temp = p->x;
+  p->x = norm * p->y;
+  p->y =-norm * temp;
+  p->z =-norm * p->z;
+}
+
+void AngleCalibrate(MPU6050_EULER_STRUCT * e, POSITION * p)
+{
+  RotInit(&mea_rot_matrix, ERROR_YAW, e->pitch, e->roll);
+  RotCoordinate(&err_rot_matrix, &mea_rot_matrix, p);
+}
+/*************/
