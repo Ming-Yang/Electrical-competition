@@ -1,6 +1,7 @@
 #ifndef _OLED_H
 #define _OLED_H
 #include "userinc.h"
+#include "mpu6050_process.h"
 #define MAX_PARA_SIZE	100 
 #define MAX_SD_SIZE	50 
 
@@ -31,11 +32,21 @@ typedef struct
   int32_t acc_x;
   int32_t acc_y;
   
+  int32_t theta;
+  MPU6050_EULER_STRUCT real;
+  MPU6050_EULER_STRUCT last_real;
+  
   PID_PARA_STRUCT x_pid;
   PID_PARA_STRUCT y_pid;
   
   PID_PARA_STRUCT x_error_pid;
   PID_PARA_STRUCT y_error_pid;
+  
+  PID_PARA_STRUCT x_err_err_pid;
+  PID_PARA_STRUCT y_err_err_pid;
+  
+  PID_PARA_STRUCT x_energy_pid;
+  PID_PARA_STRUCT y_energy_pid;
   
 }PARA_LIST_STRUCT;
 

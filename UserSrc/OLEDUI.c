@@ -53,7 +53,32 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.y_error_pid.bound,
   &setpara.y_error_pid.death,
   
+  &setpara.x_err_err_pid.kp,
+  &setpara.x_err_err_pid.ki,
+  &setpara.x_err_err_pid.kd,
+  &setpara.x_err_err_pid.bound,
+  &setpara.x_err_err_pid.death,
+                
+  &setpara.y_err_err_pid.kp,
+  &setpara.y_err_err_pid.ki,
+  &setpara.y_err_err_pid.kd,
+  &setpara.y_err_err_pid.bound,
+  &setpara.y_err_err_pid.death,
+  
+  &setpara.x_energy_pid.kp,
+  &setpara.x_energy_pid.ki,
+  &setpara.x_energy_pid.kd,
+  &setpara.x_energy_pid.bound,
+  &setpara.x_energy_pid.death,
+
+  &setpara.y_energy_pid.kp,
+  &setpara.y_energy_pid.ki,
+  &setpara.y_energy_pid.kd,
+  &setpara.y_energy_pid.bound,
+  &setpara.y_energy_pid.death,
+  
   &setpara.task_num,
+  &setpara.theta,
   
 //  &setpara,
   
@@ -85,6 +110,23 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.y_error_pid.ki,"y_EI",1},
   {&setpara.y_error_pid.kd,"y_ED",1},
 
+  {&setpara.x_err_err_pid.kp,"x_EEP",1},
+  {&setpara.x_err_err_pid.ki,"x_EEI",1},
+  {&setpara.x_err_err_pid.kd,"x_EED",1},
+                         
+  {&setpara.y_err_err_pid.kp,"y_EEP",1},
+  {&setpara.y_err_err_pid.ki,"y_EEI",1},
+  {&setpara.y_err_err_pid.kd,"y_EED",1},
+
+  {&setpara.x_energy_pid.kp,"x_EEP",1},
+  {&setpara.x_energy_pid.ki,"x_EEI",1},
+  {&setpara.x_energy_pid.kd,"x_EED",1},
+          
+  {&setpara.y_energy_pid.kp,"y_EEP",1},
+  {&setpara.y_energy_pid.ki,"y_EEI",1},
+  {&setpara.y_energy_pid.kd,"y_EED",1},
+
+  {&setpara.theta,"Th",1},
   
 //  {&setpara,"",1},
   
@@ -126,9 +168,9 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",(int)((axis_x.current_point)*100));
-  printf("%d,",(int)((int)axis_x.sum_con));
-  printf("%d,",(int)((axis_x.set_point)*100));
+  printf("%d,",(int)((axis_x_energy.current_point)*100));
+  printf("%d,",(int)((int)axis_x_energy.sum_con));
+  printf("%d,",(int)((axis_x_energy.set_point)*100));
   
   printf("%d,",(int)((axis_x_error.current_point)*100));
   printf("%d,",(int)((int)axis_x_error.sum_con));
@@ -236,12 +278,17 @@ void SysRun()
     
     ClearPIDCach(&axis_x);
     ClearPIDCach(&axis_y);
+    ClearPIDCach(&axis_x_err_err);
+    ClearPIDCach(&axis_y_err_err);
+    ClearPIDCach(&axis_x_energy);
+    ClearPIDCach(&axis_y_energy);
     
     Para2Flash();
     
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
+    
 
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
