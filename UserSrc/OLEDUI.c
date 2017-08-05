@@ -168,7 +168,10 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
+  printf("%d,",(int)((setpara.Ek)*100));
+  printf("%d,",(int)((setpara.Ep)*100));
   printf("%d,",(int)((axis_x_energy.current_point)*100));
+  
   printf("%d,",(int)((int)axis_x_energy.sum_con));
   printf("%d,",(int)((axis_x_energy.set_point)*100));
   

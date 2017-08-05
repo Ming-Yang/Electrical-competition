@@ -35,6 +35,9 @@ typedef struct
   int32_t theta;
   MPU6050_EULER_STRUCT real;
   MPU6050_EULER_STRUCT last_real;
+  int32_t Ek;
+  int32_t Ep;
+  
   
   PID_PARA_STRUCT x_pid;
   PID_PARA_STRUCT y_pid;
