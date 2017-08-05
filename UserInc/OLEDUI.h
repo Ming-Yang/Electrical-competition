@@ -54,6 +54,8 @@ typedef struct
   uint8_t sd_write;
   uint8_t force_stop;
   uint8_t force_start;
+  uint8_t force_flash;
+  uint8_t force_sd;
 }SYS_STRUCT; 
 
 typedef enum
@@ -104,5 +106,5 @@ void DataNameWriteFatfs();
 void UIInit();
 void Para2Flash();
 void SendOscilloscope();
-
+void LiveDebug();
 #endif

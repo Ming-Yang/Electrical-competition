@@ -18,6 +18,7 @@
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
+#define SD_PIN (!PEin(11))
                                       
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
@@ -44,7 +45,10 @@ void DataInput()
   TIM4->CNT = 0;
   
   indata.gy25_euler_last = indata.gy25_euler;
+  indata.global_euler_last = indata.global_euler;
+  
   GetGY_25(&indata.gy25_euler);
+  indata.global_euler = indata.gy25_euler;
   
   //  if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
   //  {
@@ -75,25 +79,25 @@ void DataProcess()
       
       GetPIDPara(&axis_x,&setpara.x_pid);
       axis_x.set_point = setpara.test_x*sin(OMEGA*0.001*sys.T_RUN)/10;
-      axis_x.current_point = indata.gy25_euler.pitch;
+      axis_x.current_point = indata.global_euler.pitch;
       IncPIDCalc(&axis_x);
 //      outdata.pwm_x = (int)axis_x.sum_con;
       
       GetPIDPara(&axis_y,&setpara.y_pid);
       axis_y.set_point = setpara.test_y/10.0;
-      axis_y.current_point = - indata.gy25_euler.roll;
+      axis_y.current_point = - indata.global_euler.roll;
       IncPIDCalc(&axis_y);
 //      outdata.pwm_y = (int)axis_y.sum_con;
       
       GetPIDPara(&axis_x_error,&setpara.x_error_pid);
       axis_x_error.set_point = setpara.acc_x/10.0;
-      axis_x_error.current_point = indata.gy25_euler.pitch - indata.gy25_euler_last.pitch;
+      axis_x_error.current_point = indata.global_euler.pitch - indata.global_euler_last.pitch;
       IncPIDCalc(&axis_x_error);
 //      outdata.pwm_x = (int)axis_x_error.sum_con;
       
       GetPIDPara(&axis_y_error,&setpara.y_error_pid);
       axis_y_error.set_point = setpara.acc_y/10.0;
-      axis_y_error.current_point = indata.gy25_euler_last.roll - indata.gy25_euler.roll;
+      axis_y_error.current_point = indata.global_euler_last.roll - indata.global_euler.roll;
       IncPIDCalc(&axis_y_error);
 //      outdata.pwm_y = (int)axis_y_error.sum_con;
       
@@ -174,7 +178,7 @@ void DataSave()
   if(!(sys.osc_suspend || OCS_PIN))
     SendOscilloscope();
   
-  if(sys.sd_write)
+  if(sys.sd_write && SD_PIN)
     DataWriteFatfs();
 }
 

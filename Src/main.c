@@ -127,12 +127,7 @@ int main(void)
 
     OledShow();
     CheckKey();
-    if(sys.force_start == 1)
-    {
-      sys.force_start = 0;
-      SysRun();
-    }
-    
+    LiveDebug();
   }
   /* USER CODE END 3 */
 

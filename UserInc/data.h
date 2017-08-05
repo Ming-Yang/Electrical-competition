@@ -19,6 +19,7 @@ typedef struct
   MPU6050_EULER_STRUCT gy25_euler;
   MPU6050_EULER_STRUCT gy25_euler_last;
   MPU6050_EULER_STRUCT global_euler;
+  MPU6050_EULER_STRUCT global_euler_last;
   DECODER_STRUCT decoder1;
   DECODER_STRUCT decoder2;
   int16_t adc10;

@@ -191,7 +191,7 @@ void ForceParaChange()
 {
   for(int i=0;i<oled.para_num;i++)
   {
-    if(abs(*para_show_table[i].para) > 500000000)
+    if(abs(*para_show_table[i].para) > 500000000 || *para_show_table[i].para == -1)
       *para_show_table[i].para = 0;
   }
 }
@@ -204,15 +204,13 @@ void SysCheck()
     break;
   case RUNNING:
     sys.T_RUN += T_PERIOD_MS;
-    if(sys.T_RUN >= setpara.set_time*100 || 
-                                              sys.force_stop == 1)
+    if(sys.T_RUN >= setpara.set_time*100)
       sys.status = BLOCKED;
 
     break;
   case BLOCKED:
     sys.T_RUN += T_PERIOD_MS;
-    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS ||
-                                              sys.force_stop == 1)
+    if(sys.T_RUN >= setpara.set_time*100 + BUFF_TIME_MS)
     {
         SysStop();
     }
@@ -416,6 +414,38 @@ void CheckKey()
     break;
   }
   button = NONE;
+}
+
+void LiveDebug()
+{
+  if(sys.force_start == 1)
+  {
+    sys.force_start = 0;
+    SysRun();
+  }
+  if(sys.force_stop == 1)
+  {
+    sys.force_stop = 0;
+    SysStop();
+  }
+  if(sys.force_flash == 1)
+  {
+    sys.force_flash = 0;
+    SendParaTable(0);
+    Para2Flash();
+  }
+  if(sys.force_sd == 1)
+  {
+    sys.force_sd = 0;
+    
+    char filename[5] = {0};
+    LCD_CLS();
+    oledprintf(3,3,"Sending SD");
+    sys.osc_suspend = 1;
+    sprintf(filename,"%d",setpara.run_counts);
+    SDFatFSRead(strcat(filename,".txt"));
+    LCD_CLS();
+  }
 }
 
 void OledShow()
