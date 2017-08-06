@@ -46,6 +46,12 @@ typedef struct
   PID_PARA_STRUCT x_err_err_pid;
   PID_PARA_STRUCT y_err_err_pid;
   
+  PID_PARA_STRUCT x_circle_pid;
+  PID_PARA_STRUCT y_circle_pid;
+  
+  PID_PARA_STRUCT x_stop_pid;
+  PID_PARA_STRUCT y_stop_pid;
+  
   PID_PARA_STRUCT x_energy_pid;
   PID_PARA_STRUCT y_energy_pid;
   

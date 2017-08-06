@@ -65,6 +65,30 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.y_err_err_pid.bound,
   &setpara.y_err_err_pid.death,
   
+  &setpara.x_stop_pid.kp,
+  &setpara.x_stop_pid.ki,
+  &setpara.x_stop_pid.kd,
+  &setpara.x_stop_pid.bound,
+  &setpara.x_stop_pid.death,
+          
+  &setpara.y_stop_pid.kp,
+  &setpara.y_stop_pid.ki,
+  &setpara.y_stop_pid.kd,
+  &setpara.y_stop_pid.bound,
+  &setpara.y_stop_pid.death,
+  
+  &setpara.x_circle_pid.kp,
+  &setpara.x_circle_pid.ki,
+  &setpara.x_circle_pid.kd,
+  &setpara.x_circle_pid.bound,
+  &setpara.x_circle_pid.death,
+
+  &setpara.y_circle_pid.kp,
+  &setpara.y_circle_pid.ki,
+  &setpara.y_circle_pid.kd,
+  &setpara.y_circle_pid.bound,
+  &setpara.y_circle_pid.death,
+  
   &setpara.x_energy_pid.kp,
   &setpara.x_energy_pid.ki,
   &setpara.x_energy_pid.kd,
@@ -175,12 +199,21 @@ void SendOscilloscope()
 //  printf("%d,",(int)((axis_y_energy.set_point-axis_x_energy.current_point)*100));
 //  printf("%d,",(int)((axis_y_energy.set_point)*100));
                            
-  printf("%d,",(int)((axis_y_err_err.set_point)*1000));
-  printf("%d,",(int)((axis_y_err_err.current_point)*1000));
-  printf("%d,",(int)((axis_y_err_err.sum_con)*10));
-  printf("%d,",(int)((axis_x_err_err.set_point)*1000));
-  printf("%d,",(int)((axis_x_err_err.current_point)*1000));
-  printf("%d,",(int)((axis_x_err_err.sum_con)*10));
+  printf("%d,",(int)((axis_y_circle.set_point)*1000));
+  printf("%d,",(int)((axis_y_circle.current_point)*1000));
+  printf("%d,",(int)((axis_y_circle.sum_con)*10));
+  printf("%d,",(int)((axis_x_circle.set_point)*1000));
+  printf("%d,",(int)((axis_x_circle.current_point)*1000));
+  printf("%d,",(int)((axis_x_circle.sum_con)*10));
+//  printf("%d,",(int)((axis_x.set_point)*1000));
+//  printf("%d,",(int)((axis_x.current_point)*1000));
+//  printf("%d,",(int)((axis_x.sum_con)*10));
+//  printf("%d,",(int)((axis_x_error.set_point)*1000));
+//  printf("%d,",(int)((axis_x_error.current_point)*1000));
+//  printf("%d,",(int)((axis_x_error.sum_con)*1));
+//  printf("%d,",(int)((axis_y_error.set_point)*1000));
+//  printf("%d,",(int)((axis_y_error.current_point)*1000));
+//  printf("%d,",(int)((axis_y_error.sum_con)*1));
   
 //  printf("%d,",(int)((axis_y.current_point)*100));
 //  printf("%d,",(int)((axis_y.set_point)*100));
@@ -212,9 +245,9 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"G:%4.2fE:%4.2f",indata.global_euler.roll,indata.gy25_euler.roll);
-    oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
-    oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
+    oledprintf(0,0,"G:%4.2fE:%4.2f",indata.gy25_euler.roll ,indata.global_euler.roll );
+    oledprintf(1,0,"G %4.2fE %4.2f",indata.gy25_euler.pitch,indata.global_euler.pitch);
+    oledprintf(2,0,"G %4.2fE %4.2f",indata.gy25_euler.yaw  ,indata.global_euler.yaw  );
     oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
     oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
     break;
@@ -294,8 +327,14 @@ void SysRun()
     
     ClearPIDCach(&axis_x);
     ClearPIDCach(&axis_y);
+    ClearPIDCach(&axis_x_error);
+    ClearPIDCach(&axis_y_error);
     ClearPIDCach(&axis_x_err_err);
     ClearPIDCach(&axis_y_err_err);
+    ClearPIDCach(&axis_x_stop);
+    ClearPIDCach(&axis_y_stop);
+    ClearPIDCach(&axis_x_circle);
+    ClearPIDCach(&axis_y_circle);
     ClearPIDCach(&axis_x_energy);
     ClearPIDCach(&axis_y_energy);
     

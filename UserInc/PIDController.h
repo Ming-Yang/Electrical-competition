@@ -25,7 +25,7 @@ typedef struct PIDs
 }PID;
 #define PIDLowPassFilter 0
 #define PIDBound 0
-#define PIDLowPassOut 1
+#define PIDLowPassOut 0
 #define PIDDeadZone 1
 
 void IncPIDCalc(PID * pid_ptr);
