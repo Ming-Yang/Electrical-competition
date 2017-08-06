@@ -3,9 +3,9 @@
 
 void IncPIDCalc(PID * pid_ptr)
 {
-        float proportion  = (float)pid_ptr->proportion  /1000.0;
-        float integral    = (float)pid_ptr->integral    /1000.0;
-        float differential= (float)pid_ptr->differential/1000.0;
+        float proportion  = (float)pid_ptr->proportion  ;
+        float integral    = (float)pid_ptr->integral    ;
+        float differential= (float)pid_ptr->differential;
         //当前误差
 #if   PIDLowPassFilter
         pid_ptr->set_point = 0.1 * pid_ptr->set_point + 0.8 * pid_ptr->last_set_point + 0.1 * pid_ptr->prev_set_point;
@@ -36,6 +36,12 @@ void IncPIDCalc(PID * pid_ptr)
 #else
         pid_ptr->sum_con += current_control;
 #endif //PIDDeadZone
+        
+#if PIDLowPassOut
+        pid_ptr->prev_sum_con = pid_ptr->last_sum_con;
+        pid_ptr->last_sum_con = pid_ptr->sum_con;
+        pid_ptr->sum_con = 0.1*pid_ptr->sum_con + 0.8*pid_ptr->last_sum_con + 0.1*pid_ptr->prev_sum_con;
+#endif //PIDLowPassOut
 
 #if PIDBound
         if (pid_ptr->sum_con>=pid_ptr->upper_bound)

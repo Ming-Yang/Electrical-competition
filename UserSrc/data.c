@@ -21,12 +21,12 @@
 #define ERROR_YAW 2.204615824775566f
 #define GY25INIT_TIME_MS 0 //如果不是0，则为校准GY25的时间(ms)
 #define STICK_LENGTH 0.52
-#define AXIS_HIGH 0.64
+#define AXIS_HIGH 0.575
                                       
-//#define PHI_MAX 0.4383
-#define PHI_MAX 10*DEG_TO_RAD
-#define ROU_MAX 23.6702
-                                      
+#define PHI_MAX 0.47
+//#define PHI_MAX 10*DEG_TO_RAD
+#define ROU_MAX 0.25
+     
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
 
@@ -41,6 +41,33 @@ PID axis_y_err_err;
 
 PID axis_x_energy;
 PID axis_y_energy;
+///*******Kalman滤波器******/
+//typedef struct KALMAN_FILTERs
+//{
+//        float x_last;
+//        float p_last;
+//        float Q;
+//        float R;
+//        float kg;
+//        float x_mid;
+//        float x_now;
+//        float p_mid;
+//        float p_now;
+//        float resrc_data;
+//}KALMAN_FILTER;
+//KALMAN_FILTER k;
+//void KalmanFilter(KALMAN_FILTER* kf)
+//{
+//        kf->x_mid = kf->x_last; //x_last=x(k-1|k-1),x_mid=x(k|k-1)
+//        kf->p_mid = kf->p_last + kf->Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
+//        kf->kg = kf->p_mid / (kf->p_mid + kf->R); //kg为kalman filter，R为噪声
+//        kf->x_now = kf->x_mid + kf->kg*(kf->resrc_data - kf->x_mid);//估计出的最优值
+//        kf->p_now = (1 - kf->kg)*kf->p_mid;//最优值对应的协方差
+//        kf->p_last = kf->p_now;   //更新covariance值
+//        kf->x_last = kf->x_now;   //更新系统状态值
+//}
+///*************/
+
 
 ROT_MATRIX err_rot_matrix;
 ROT_MATRIX mea_rot_matrix;
@@ -71,9 +98,9 @@ void DataInput()
     
   InitOffsetGy25();
   AngleCalibrate(&indata.gy25_euler, &pendulum_pos);
-  indata.global_euler.roll =  100*STICK_LENGTH*pendulum_pos.x;
-  indata.global_euler.pitch = 100*STICK_LENGTH*pendulum_pos.y;
-  indata.global_euler.yaw =   100*STICK_LENGTH*pendulum_pos.z;
+  indata.global_euler.roll =  100*pendulum_pos.x;
+  indata.global_euler.pitch = 100*pendulum_pos.y;
+  indata.global_euler.yaw =   100*pendulum_pos.z;
   
   //  if (HAL_ADC_PollForConversion(&hadc1, 0) == HAL_OK)
   //  {
@@ -83,6 +110,8 @@ void DataInput()
 
 void DataProcess()
 {  
+  
+  float full_energy, e_p, e_k, full_v, x_v, y_v;
   if(sys.status == RUNNING)
   { 
     switch(setpara.task_num)
@@ -90,102 +119,75 @@ void DataProcess()
     case 1:
       //复制参数
       setpara.y_error_pid = setpara.x_error_pid;      
-      setpara.x_error_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.x_error_pid.bound = setpara.y_error_pid.bound = MAX_PWM;
       setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
       
       //正交分解到x方向
-      GetPIDPara(&axis_x_err_err,&setpara.x_pid);
+      GetPIDPara(&axis_x_err_err,&setpara.x_error_pid);
       //PHI_MAX是使摆幅足以超过50cm的摆动的最大角度
       axis_x_err_err.set_point = PHI_MAX*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
-      axis_x_err_err.current_point = atan(pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
+      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_x_err_err);
       outdata.pwm_x = (int)axis_x_err_err.sum_con;
       
       //正交分解到y方向
-      GetPIDPara(&axis_y_err_err,&setpara.y_pid);
+      GetPIDPara(&axis_y_err_err,&setpara.y_error_pid);
       axis_y_err_err.set_point = 0;
-      axis_y_err_err.current_point = atan(pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
+      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_y_err_err);
       outdata.pwm_y = (int)axis_y_err_err.sum_con;
       break;
     case 2:
-      setpara.y_error_pid = setpara.x_error_pid;
-      setpara.y_pid = setpara.x_pid;
-      
-      setpara.x_pid.bound = setpara.y_pid.bound = MAX_PWM;
-      setpara.x_pid.death = setpara.y_pid.death = 0;
-      setpara.x_error_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.y_error_pid = setpara.x_error_pid;      
+      setpara.x_error_pid.bound = setpara.y_error_pid.bound = MAX_PWM;
       setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
       
-      GetPIDPara(&axis_x_err_err,&setpara.x_pid);
-      axis_x_err_err.set_point = atan(setpara.test_x/100/AXIS_HIGH)*sin(OMEGA*0.001*sys.T_RUN);
-      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z);
+      GetPIDPara(&axis_x_err_err,&setpara.x_error_pid);
+      axis_x_err_err.set_point = atan(setpara.test_x/100.0/AXIS_HIGH*1.06)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG*1;
+      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_x_err_err);
       outdata.pwm_x = (int)axis_x_err_err.sum_con;
       
-      GetPIDPara(&axis_y_err_err,&setpara.y_pid);
+      GetPIDPara(&axis_y_err_err,&setpara.y_error_pid);
       axis_y_err_err.set_point = 0;
-      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z);
+      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_y_err_err);
       outdata.pwm_y = (int)axis_y_err_err.sum_con;
       break;
     case 3:
-      setpara.y_error_pid = setpara.x_error_pid;
-      setpara.y_pid = setpara.x_pid;
-      
-      setpara.x_pid.bound = setpara.y_pid.bound = MAX_PWM;
-      setpara.x_pid.death = setpara.y_pid.death = 0;
-      setpara.x_error_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.y_error_pid = setpara.x_error_pid;      
+      setpara.x_error_pid.bound = setpara.y_error_pid.bound = MAX_PWM;
       setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
       
-      GetPIDPara(&axis_x_err_err,&setpara.x_pid);
-      axis_x_err_err.set_point = ROU_MAX*cos(setpara.theta*DEG_TO_RAD)*sin(OMEGA*0.001*sys.T_RUN);
-      axis_x_err_err.current_point = atan(pendulum_pos.x/pendulum_pos.z);
+      GetPIDPara(&axis_x_err_err,&setpara.x_error_pid);
+      axis_x_err_err.set_point = ROU_MAX*cos(setpara.theta*DEG_TO_RAD)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_x_err_err);
       outdata.pwm_x = (int)axis_x_err_err.sum_con;
       
-      GetPIDPara(&axis_y_err_err,&setpara.y_pid);
-      axis_y_err_err.set_point = ROU_MAX*sin(setpara.theta*DEG_TO_RAD)*sin(OMEGA*0.001*sys.T_RUN);;
-      axis_y_err_err.current_point = atan(pendulum_pos.y/pendulum_pos.z);
+      GetPIDPara(&axis_y_err_err,&setpara.y_error_pid);
+      axis_y_err_err.set_point = ROU_MAX*sin(setpara.theta*DEG_TO_RAD)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_y_err_err);
       outdata.pwm_y = (int)axis_y_err_err.sum_con;
       break;
     case 4:
-      setpara.y_error_pid = setpara.x_error_pid;
-      setpara.y_pid = setpara.x_pid;
       
+      setpara.y_pid = setpara.x_pid;      
       setpara.x_pid.bound = setpara.y_pid.bound = MAX_PWM;
       setpara.x_pid.death = setpara.y_pid.death = 0;
-      setpara.x_error_pid.bound = setpara.y_pid.bound = MAX_PWM;
-      setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
       
-      GetPIDPara(&axis_x,&setpara.x_pid);
-      axis_x.set_point = setpara.test_x * sin(OMEGA*0.001*sys.T_RUN)/10;
-      axis_x.current_point = indata.gy25_euler.pitch;
+      GetPIDPara(&axis_x_err_err,&setpara.x_error_pid);
+      axis_x.set_point = setpara.test_x * sin(OMEGA*0.001*sys.T_RUN)/10.0;
+      axis_x.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_x);
-//      outdata.pwm_x = (int)axis_x.sum_con;
+      outdata.pwm_x = (int)axis_x.sum_con;
       
-      GetPIDPara(&axis_y,&setpara.y_pid);
-      axis_y.set_point = setpara.test_y/10.0;
-      axis_y.current_point = - indata.gy25_euler.roll;
+      GetPIDPara(&axis_y,&setpara.y_error_pid);
+      axis_y.set_point = setpara.test_y * cos(OMEGA*0.001*sys.T_RUN)/10.0;
+      axis_y.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_y);
-//      outdata.pwm_y = (int)axis_y.sum_con;
-      
-      GetPIDPara(&axis_x_error,&setpara.x_error_pid);
-      axis_x_error.set_point = setpara.acc_x/10.0;
-      axis_x_error.current_point = indata.gy25_euler.pitch - indata.gy25_euler_last.pitch;
-      IncPIDCalc(&axis_x_error);
-//      outdata.pwm_x = (int)axis_x_error.sum_con;
-      
-      GetPIDPara(&axis_y_error,&setpara.y_error_pid);
-      axis_y_error.set_point = setpara.acc_y/10.0;
-      axis_y_error.current_point = indata.gy25_euler_last.roll - indata.gy25_euler.roll;
-      IncPIDCalc(&axis_y_error);
-//      outdata.pwm_y = (int)axis_y_error.sum_con;
-      
-      outdata.pwm_x = (int)(axis_x.sum_con + axis_x_error.sum_con);
-      outdata.pwm_y = (int)(axis_y.sum_con + axis_y_error.sum_con);
-      
+      outdata.pwm_y = (int)axis_y.sum_con;
       
       break;
     case 5:
@@ -198,18 +200,40 @@ void DataProcess()
       setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
       
       GetPIDPara(&axis_x_err_err,&setpara.x_pid);
-      axis_x_err_err.set_point = atan(setpara.test_x/100/AXIS_HIGH)*sin(OMEGA*0.001*sys.T_RUN);
-      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z);
+      axis_x_err_err.set_point = atan(setpara.test_x/100.0/AXIS_HIGH)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+//      axis_x_err_err.set_point = atan(setpara.test_x/100.0/AXIS_HIGH*1.15)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+//      if (axis_x_err_err.set_point<0)
+//        axis_x_err_err.set_point *= 0.78;
+      axis_x_err_err.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_x_err_err);
       outdata.pwm_x = (int)axis_x_err_err.sum_con;
       
       GetPIDPara(&axis_y_err_err,&setpara.y_pid);
-      axis_y_err_err.set_point = atan(setpara.test_x/100/AXIS_HIGH)*cos(OMEGA*0.001*sys.T_RUN);;
-      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z);
+      axis_y_err_err.set_point = atan(setpara.test_y/100.0/AXIS_HIGH)*cos(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+//      axis_x_err_err.set_point = atan(setpara.test_x/100.0/AXIS_HIGH*1.15)*sin(OMEGA*0.001*sys.T_RUN)*RAD_TO_DEG;
+//      if (axis_x_err_err.set_point<0)
+//        axis_x_err_err.set_point *= 0.85;
+      axis_y_err_err.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
       IncPIDCalc(&axis_y_err_err);
       outdata.pwm_y = (int)axis_y_err_err.sum_con;
       break;
     case 6:
+      
+      setpara.y_pid = setpara.x_pid;      
+      setpara.x_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.x_pid.death = setpara.y_pid.death = 0;
+      
+      GetPIDPara(&axis_x,&setpara.x_pid);
+      axis_x.set_point = setpara.test_x * sin(OMEGA*0.001*sys.T_RUN)/10;
+      axis_x.current_point = atan(-pendulum_pos.x/pendulum_pos.z)*RAD_TO_DEG;
+//      IncPIDCalc(&axis_x);
+      outdata.pwm_x = (int)axis_x.sum_con;
+      
+      GetPIDPara(&axis_y,&setpara.y_pid);
+      axis_y.set_point = setpara.test_y * cos(OMEGA*0.001*sys.T_RUN)/10;
+      axis_y.current_point = atan(-pendulum_pos.y/pendulum_pos.z)*RAD_TO_DEG;
+//      IncPIDCalc(&axis_y);
+      outdata.pwm_y = (int)axis_y.sum_con;
       break;
     case 7:
       break;
@@ -219,11 +243,12 @@ void DataProcess()
       break;
     case 10://      setpara.y_err_err_pid = setpara.x_err_err_pid;
       //通过位置误差控制摆的PWM，最终失败了，因为摆不知道自己的速度，只要位置不到就会猛加速，最终很难控制到同相位振动。
+      //后来发现可以通过调节PID参数修正
       setpara.x_err_err_pid.bound = setpara.y_err_err_pid.bound = MAX_PWM;
       setpara.x_err_err_pid.death = setpara.y_err_err_pid.death = 0;
       
       setpara.y_err_err_pid = setpara.x_err_err_pid;
-                                                 
+
       //正交分解到x方向
       GetPIDPara(&axis_x_err_err,&setpara.x_err_err_pid);
       //PHI_MAX是使摆幅足以超过50cm的摆动的最大角度
@@ -239,8 +264,47 @@ void DataProcess()
       IncPIDCalc(&axis_y_err_err);
       outdata.pwm_y = (int)axis_y_err_err.sum_con;
       break;
-      break;
-    default:
+    case 11:
+      {
+          full_energy = CONSTANTS_ONE_G * setpara.test_y/1000;
+          e_p = CONSTANTS_ONE_G * pendulum_pos.z;
+          full_v = sqrt(2*(full_energy - e_p));
+          x_v = cos(setpara.test_x*DEG_TO_RAD)*full_v;
+          y_v = sin(setpara.test_x*DEG_TO_RAD)*full_v;
+
+          indata.last_calibrate.pitch = indata.calibrate.pitch;
+          indata.calibrate.pitch = asin((pendulum_pos.x)/sqrt(pendulum_pos.x*pendulum_pos.x+pendulum_pos.z*pendulum_pos.z));
+          float dpitch = (indata.calibrate.pitch - indata.last_calibrate.pitch)*STICK_LENGTH/0.01;
+
+          indata.last_calibrate.roll = indata.calibrate.roll;
+          indata.calibrate.roll = asin((pendulum_pos.y)/sqrt(pendulum_pos.y*pendulum_pos.y+pendulum_pos.z*pendulum_pos.z));
+          float droll = (indata.calibrate.roll - indata.last_calibrate.roll)*STICK_LENGTH/0.01;
+
+          setpara.x_energy_pid.bound = setpara.y_energy_pid.bound = MAX_PWM;
+          setpara.x_energy_pid.death = setpara.y_energy_pid.death = 0;
+          setpara.y_energy_pid = setpara.x_energy_pid;
+          GetPIDPara(&axis_x_energy,&setpara.x_energy_pid);
+          GetPIDPara(&axis_y_energy,&setpara.y_energy_pid);
+
+          axis_x_energy.current_point = dpitch;
+          axis_y_energy.current_point = droll;
+          axis_x_energy.set_point = x_v;
+          axis_y_energy.set_point = y_v;
+          IncPIDCalc(&axis_x_energy);
+          IncPIDCalc(&axis_y_energy);
+          if (dpitch > 0)
+                    outdata.pwm_x = (int)axis_x_energy.sum_con;
+          else
+                    outdata.pwm_x =-(int)axis_x_energy.sum_con;
+          if (droll > 0)
+                    outdata.pwm_y = (int)axis_y_energy.sum_con;
+          else
+                    outdata.pwm_y =-(int)axis_y_energy.sum_con;
+
+          break;
+          }
+    case 12:
+      //最终因为势能很难分解到XY方向失败
 //      setpara.y_err_err_pid = setpara.x_err_err_pid;
             //复制参数
       setpara.x_energy_pid.bound = setpara.y_energy_pid.bound = MAX_PWM;
@@ -250,33 +314,74 @@ void DataProcess()
       GetPIDPara(&axis_y_energy,&setpara.y_energy_pid);
                                                    
       //正交分解到x方向
-      setpara.last_real.pitch = setpara.real.pitch; 
-      setpara.real.pitch = acos((pendulum_pos.x)/sqrt(pendulum_pos.x*pendulum_pos.x+pendulum_pos.z*pendulum_pos.z));
-      float dpitch = (setpara.real.pitch - setpara.last_real.pitch)*DEG_TO_RAD*STICK_LENGTH/0.01;
-      axis_x_energy.set_point = 100000*CONSTANTS_ONE_G*setpara.test_x/100;//setpara.test_x代表摆的高度，单位cm
-      setpara.Ek = 100000*0.5*dpitch*dpitch;
-      setpara.Ep = 100000*CONSTANTS_ONE_G*STICK_LENGTH*(1+pendulum_pos.z)*(pendulum_pos.x*pendulum_pos.x)/(pendulum_pos.x*pendulum_pos.x+pendulum_pos.y*pendulum_pos.y);
+      indata.last_calibrate.pitch = indata.calibrate.pitch; 
+      indata.calibrate.pitch = asin((pendulum_pos.x)/sqrt(pendulum_pos.x*pendulum_pos.x+pendulum_pos.z*pendulum_pos.z));
+      float dpitch = (indata.calibrate.pitch - indata.last_calibrate.pitch)*STICK_LENGTH/0.01;
+      axis_x_energy.set_point = 1000*CONSTANTS_ONE_G*setpara.test_x/100;//setpara.test_x代表摆的高度，单位cm
+      setpara.Ek = 1000*0.5*dpitch*dpitch;
+//      k.Q = 1;      k.R = 1;      
+//      k.resrc_data = setpara.Ek;      KalmanFilter(&k);      setpara.Ek = k.x_now;
+      setpara.Ep = 1000*CONSTANTS_ONE_G*STICK_LENGTH*(1+pendulum_pos.z)*
+        (pendulum_pos.x*pendulum_pos.x)/(pendulum_pos.x*pendulum_pos.x+pendulum_pos.y*pendulum_pos.y);
       axis_x_energy.current_point = setpara.Ek + setpara.Ep;
-      IncPIDCalc(&axis_x_energy);
+      IncPIDCalc(&axis_x_energy);      
       if (dpitch > 0)
-          outdata.pwm_x =-(int)axis_x_energy.sum_con;
-      else
           outdata.pwm_x = (int)axis_x_energy.sum_con;
+      else
+          outdata.pwm_x =-(int)axis_x_energy.sum_con;
         
       
       //正交分解到y方向
-      setpara.last_real.roll = setpara.real.roll; 
-      setpara.real.roll = acos((pendulum_pos.y)/sqrt(pendulum_pos.y*pendulum_pos.y+pendulum_pos.z*pendulum_pos.z));
-      float droll = (setpara.real.roll - setpara.last_real.roll)*DEG_TO_RAD*STICK_LENGTH/0.01;
+      indata.last_calibrate.roll = indata.calibrate.roll; 
+      indata.calibrate.roll = asin((pendulum_pos.y)/sqrt(pendulum_pos.y*pendulum_pos.y+pendulum_pos.z*pendulum_pos.z));
+      float droll = fabs(indata.calibrate.roll - indata.last_calibrate.roll)*STICK_LENGTH/0.01;
       axis_y_energy.set_point = 0;//目标能量为0
-      axis_y_energy.current_point = 100000*(0.5*droll*droll+CONSTANTS_ONE_G*STICK_LENGTH*(1+pendulum_pos.z)*
+      axis_y_energy.current_point = 1000*(0.5*droll*droll+CONSTANTS_ONE_G*(1+pendulum_pos.z)*
              (pendulum_pos.y*pendulum_pos.y)/(pendulum_pos.x*pendulum_pos.x+pendulum_pos.y*pendulum_pos.y));
       IncPIDCalc(&axis_y_energy);
       if (droll > 0)
-          outdata.pwm_y =-(int)axis_y_energy.sum_con;
-      else
           outdata.pwm_y = (int)axis_y_energy.sum_con;
+      else
+          outdata.pwm_y =-(int)axis_y_energy.sum_con;
        
+      break;
+    default:
+      setpara.y_error_pid = setpara.x_error_pid;
+      setpara.y_pid = setpara.x_pid;
+      
+      setpara.x_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.x_pid.death = setpara.y_pid.death = 0;
+      setpara.x_error_pid.bound = setpara.y_pid.bound = MAX_PWM;
+      setpara.x_error_pid.death = setpara.y_error_pid.death = 0;
+      
+      GetPIDPara(&axis_x,&setpara.x_pid);
+//      axis_x.err_up_infinitesimal = 1;
+//      axis_x.err_up_infinitesimal =-axis_x.err_up_infinitesimal;
+      axis_x.set_point = setpara.test_x * sin(OMEGA*0.001*sys.T_RUN)/10;
+      axis_x.current_point = indata.gy25_euler.pitch;
+      IncPIDCalc(&axis_x);
+      outdata.pwm_x = (int)axis_x.sum_con;
+      
+      GetPIDPara(&axis_y,&setpara.y_pid);
+      axis_y.set_point = setpara.test_y * cos(OMEGA*0.001*sys.T_RUN)/10;
+      axis_y.current_point = - indata.gy25_euler.roll;
+      IncPIDCalc(&axis_y);
+      outdata.pwm_y = (int)axis_y.sum_con;
+      
+//      GetPIDPara(&axis_x_error,&setpara.x_error_pid);
+//      axis_x_error.set_point = setpara.acc_x/10.0;
+//      axis_x_error.current_point = indata.gy25_euler.pitch - indata.gy25_euler_last.pitch;
+//      IncPIDCalc(&axis_x_error);
+////      outdata.pwm_x = (int)axis_x_error.sum_con;
+//      
+//      GetPIDPara(&axis_y_error,&setpara.y_error_pid);
+//      axis_y_error.set_point = setpara.acc_y/10.0;
+//      axis_y_error.current_point = indata.gy25_euler_last.roll - indata.gy25_euler.roll;
+//      IncPIDCalc(&axis_y_error);
+////      outdata.pwm_y = (int)axis_y_error.sum_con;
+//      
+//      outdata.pwm_x = (int)(axis_x.sum_con + axis_x_error.sum_con);
+//      outdata.pwm_y = (int)(axis_y.sum_con + axis_y_error.sum_con);
       break;
     }
   }
@@ -395,8 +500,8 @@ void InitOffsetGy25()
   if (GY25INIT_TIME_MS == 0)
   {
     RotReverseInit(&err_rot_matrix, ERROR_YAW,
-                 1.51571765E-1,
-                 -2.8266940111);
+                 2.21051752E-1,
+                 -2.7981832022);
   }
   else if(T < GY25INIT_TIME_MS && T > 0)
   {
@@ -444,7 +549,7 @@ void RotCoordinate(ROT_MATRIX* error, ROT_MATRIX* measure, POSITION* p)
        p->y += measure->r[3+j] * error->r[j+6];
        p->z += measure->r[6+j] * error->r[j+6];
   }   
-  norm = invSqrt(p->x * p->x + p->y * p->y + p->z * p->z);
+  norm = STICK_LENGTH * invSqrt(p->x * p->x + p->y * p->y + p->z * p->z);
   float temp;
   temp = p->x;
   p->x = norm * p->y;

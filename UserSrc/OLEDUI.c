@@ -168,16 +168,29 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",(int)((setpara.Ek)*100));
-  printf("%d,",(int)((setpara.Ep)*100));
-  printf("%d,",(int)((axis_x_energy.current_point)*100));
+//  printf("%d,",(int)(((int)setpara.Ek)*100));
+//  printf("%d,",(int)(((int)setpara.Ep)*100));
+//  printf("%d,",(int)((axis_x_energy.current_point)*100));
+//  printf("%d,",(int)((axis_y_energy.sum_con)*10));
+//  printf("%d,",(int)((axis_y_energy.set_point-axis_x_energy.current_point)*100));
+//  printf("%d,",(int)((axis_y_energy.set_point)*100));
+                           
+  printf("%d,",(int)((axis_y_err_err.set_point)*1000));
+  printf("%d,",(int)((axis_y_err_err.current_point)*1000));
+  printf("%d,",(int)((axis_y_err_err.sum_con)*10));
+  printf("%d,",(int)((axis_x_err_err.set_point)*1000));
+  printf("%d,",(int)((axis_x_err_err.current_point)*1000));
+  printf("%d,",(int)((axis_x_err_err.sum_con)*10));
   
-  printf("%d,",(int)((int)axis_x_energy.sum_con));
-  printf("%d,",(int)((axis_x_energy.set_point)*100));
+//  printf("%d,",(int)((axis_y.current_point)*100));
+//  printf("%d,",(int)((axis_y.set_point)*100));
+//  printf("%d,",(int)((axis_y.sum_con)*10));
   
-  printf("%d,",(int)((axis_x_error.current_point)*100));
-  printf("%d,",(int)((int)axis_x_error.sum_con));
-  printf("%d,",(int)((axis_x_error.set_point)*100));
+  printf("%d,",(int)((axis_x.last_error)*1000));
+  printf("%d,",(int)((axis_x.last_con)*1000));
+  printf("%d,",(int)((sys.T_RUN)*1));
+  
+  
 //  
 //  
 //  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));

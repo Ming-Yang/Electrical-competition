@@ -14,6 +14,8 @@ typedef struct PIDs
         float differential;
         float last_con;
         float sum_con;
+        float last_sum_con;
+        float prev_sum_con;
         float last_error;
         float prev_error;
         float err_up_infinitesimal;
@@ -22,7 +24,8 @@ typedef struct PIDs
         float lower_bound;
 }PID;
 #define PIDLowPassFilter 0
-#define PIDBound 1
+#define PIDBound 0
+#define PIDLowPassOut 1
 #define PIDDeadZone 1
 
 void IncPIDCalc(PID * pid_ptr);
