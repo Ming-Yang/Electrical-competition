@@ -138,7 +138,7 @@ extern void PwmChangeDuty(TIM_HandleTypeDef *htim, uint32_t Channel, uint32_t Du
 
 #define delay_ms(a) HAL_Delay(a)
 #define delay_us(a) systick_delayus(a)
-
+#define PwmChangeFrequency(a,b) (a)->Instance->ARR = (b)
 
 /***用户变量声明***/
 #define UART_BUFF_SIZE 100

@@ -67,18 +67,23 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(htim);
-  uint32_t pwm;
-  
+  uint32_t pwm,hz;
+
   HAL_NVIC_DisableIRQ(TIM2_IRQn);
   HAL_NVIC_DisableIRQ(TIM3_IRQn);
   
   if(htim->Instance == htim2.Instance)
     switch(htim->Channel)
     {
-    case HAL_TIM_ACTIVE_CHANNEL_1:pwm = outdata.tim2.channel1;break;
-    case HAL_TIM_ACTIVE_CHANNEL_2:pwm = outdata.tim2.channel2;break;
-    case HAL_TIM_ACTIVE_CHANNEL_3:pwm = outdata.tim2.channel3;break;
-    case HAL_TIM_ACTIVE_CHANNEL_4:pwm = outdata.tim2.channel4;break;
+    case HAL_TIM_ACTIVE_CHANNEL_1:
+      hz = (int)(1000000/outdata.motor_hz);
+      hz = limit(hz, 100, 1000000);
+
+      htim2.Instance->CNT = 0;
+      htim2.Instance->ARR = hz;
+      htim2.Instance->CCR1 = (hz/2);
+      break;
+    
     default:break;
     }
   
@@ -91,8 +96,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
     case HAL_TIM_ACTIVE_CHANNEL_4:pwm = outdata.tim3.channel4;break;
     default:break;
     }
-  
-  PwmChangeDuty(htim,htim->Channel,pwm);
+
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
