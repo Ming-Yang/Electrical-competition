@@ -34,8 +34,12 @@ typedef struct
 }CHANNEL_STRUCT;
 
 typedef struct{
+  uint32_t max_frequency;
+  uint32_t min_frequency;
   uint32_t frequency;
   uint16_t direction;
+  float lenth_mm;
+  float set_lenth_mm;
   int32_t speed;
   uint32_t angle;
   uint32_t enable;

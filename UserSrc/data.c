@@ -18,7 +18,13 @@
                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
 #define SD_PIN (!PEin(11))                                  
-                                      
+            
+#define STEP_DIV        8
+#define MM_1204 4
+#define MM_PER_PULSE    0.005*MM_1204/STEP_DIV
+#define MIN_STEP_FREQUENCY      800
+#define MAX_STEP_FREQUENCY      8000  
+
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
 
@@ -40,31 +46,85 @@ void DataInput()
 
 void DataProcess()
 {  
-  if(sys.status == RUNNING)
+  if(sys.status == BLOCKED)
+  {
+    outdata.step_motor1.speed = 0;
+    outdata.step_motor2.speed = 0;
+  }
+  
+  else if(sys.status == RUNNING)
   { 
     switch(setpara.task_num)
     {
     case 1:
+      outdata.step_motor1.speed = setpara.test_1;
+      outdata.step_motor2.speed = setpara.test_2;
+      
+      if(outdata.step_motor1.speed > 0)
+        outdata.step_motor1.direction = 0;
+      else
+        outdata.step_motor1.direction = 1;
+      
+      if(outdata.step_motor2.speed > 0)
+        outdata.step_motor2.direction = 0;
+      else
+        outdata.step_motor2.direction = 1;
+      
+      outdata.step_motor1.frequency = abs(outdata.step_motor1.speed);
+      outdata.step_motor2.frequency = abs(outdata.step_motor2.speed);
       break;
     case 2:
+      outdata.step_motor1.set_lenth_mm = setpara.test_1/10.0;
+      outdata.step_motor2.set_lenth_mm = setpara.test_2/10.0;
+      
+      if(outdata.step_motor1.direction == 1)
+        outdata.step_motor1.lenth_mm += (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+      else
+        outdata.step_motor1.lenth_mm -= (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+      if(outdata.step_motor2.direction == 1)
+        outdata.step_motor2.lenth_mm += (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+      else
+        outdata.step_motor2.lenth_mm -= (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+      
+      if(outdata.step_motor1.set_lenth_mm - outdata.step_motor1.lenth_mm > 0.1)
+      {
+        outdata.step_motor1.direction = 1;
+        switch(outdata.step_motor1.frequency)
+        {
+        case 0:outdata.step_motor1.frequency = MIN_STEP_FREQUENCY;break;
+        case MIN_STEP_FREQUENCY: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/5;break;
+        case MAX_STEP_FREQUENCY/5: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/4;break;
+        case MAX_STEP_FREQUENCY/4: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/2;break;
+        case MAX_STEP_FREQUENCY/2: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY;break;
+        default: break;
+        }
+      }
+      else if(outdata.step_motor1.set_lenth_mm - outdata.step_motor1.lenth_mm < -0.1)
+      {
+        outdata.step_motor1.direction = 0;
+        switch(outdata.step_motor1.frequency)
+        {
+        case 0:outdata.step_motor1.frequency = MIN_STEP_FREQUENCY;break;
+        case MIN_STEP_FREQUENCY: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/5;break;
+        case MAX_STEP_FREQUENCY/5: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/4;break;
+        case MAX_STEP_FREQUENCY/4: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/2;break;
+        case MAX_STEP_FREQUENCY/2: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY;break;
+        default: break;
+        }
+      }
+      else
+      {
+        outdata.step_motor1.frequency = 0;
+      }
+
       break;
       
     default:
-      outdata.step_motor1.speed = setpara.test_1;
-      outdata.step_motor2.speed = setpara.test_2;
+      
       break;
     }
   }
-  else if(sys.status == BLOCKED)
-  {
-//    PAout(2) = outdata.step_motor1.enable = 0;
-//    PBout(0) = outdata.step_motor1.enable = 0;
-  }
-  else
-  {
-    PAout(2) = outdata.step_motor1.enable = 0;
-    PBout(0) = outdata.step_motor1.enable = 0;
-  }
+
 }
 
 void DataOutput()
@@ -79,19 +139,6 @@ void DataOutput()
     PAout(2) = outdata.step_motor1.enable = 0;
     PBout(0) = outdata.step_motor1.enable = 0;
   }
-  
-  outdata.step_motor1.frequency = abs(outdata.step_motor1.speed);
-  outdata.step_motor2.frequency = abs(outdata.step_motor2.speed);
-  
-  if(outdata.step_motor1.speed > 0)
-    outdata.step_motor1.direction = 0;
-  else
-    outdata.step_motor1.direction = 1;
-  
-  if(outdata.step_motor2.speed > 0)
-    outdata.step_motor2.direction = 0;
-  else
-    outdata.step_motor2.direction = 1;
   
   PAout(1) = outdata.step_motor1.direction;
   PAout(7) = outdata.step_motor2.direction;

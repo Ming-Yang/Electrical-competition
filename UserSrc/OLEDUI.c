@@ -185,6 +185,7 @@ void SysRun()
   {
     memset(&sys,0,sizeof(SYS_STRUCT)); 
     memset(&indata,0,sizeof(DATA_IN_STRUCT));
+    memset(&outdata,0,sizeof(DATA_OUT_STRUCT));
     setpara.run_counts++;
     
     Para2Flash();

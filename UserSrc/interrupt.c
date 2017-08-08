@@ -88,10 +88,17 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
       hz = (int)(1000000/outdata.step_motor1.frequency-1);
       hz = limit(hz, 100, 100000);
       
-      htim2.Instance->ARR = hz;
-      if(htim2.Instance->CNT > htim2.Instance->ARR)
-        htim2.Instance->CNT = 0;
-      htim2.Instance->CCR1 = (hz/2);
+      if(hz == 100000)
+      {
+        htim2.Instance->CCR1 = 0;
+      }
+      else
+      {
+        htim2.Instance->ARR = hz;
+        if(htim2.Instance->CNT > htim2.Instance->ARR)
+          htim2.Instance->CNT = 0;
+        htim2.Instance->CCR1 = (hz/2);
+      }
       break;
       
     default:break;
@@ -104,10 +111,15 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
       hz = (int)(1000000/outdata.step_motor2.frequency-1);
       hz = limit(hz, 100, 100000);
 
-      htim3.Instance->ARR = hz;
-      if(htim3.Instance->CNT > htim3.Instance->ARR)
-        htim3.Instance->CNT = 0;
-      htim3.Instance->CCR1 = (hz/2);
+      if(hz == 100000)
+        htim3.Instance->CCR1 = 0;
+      else
+      {
+        htim3.Instance->ARR = hz;
+        if(htim3.Instance->CNT > htim3.Instance->ARR)
+          htim3.Instance->CNT = 0;
+        htim3.Instance->CCR1 = (hz/2);
+      }
     break;
 
     default:break;
