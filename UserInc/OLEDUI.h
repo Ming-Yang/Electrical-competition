@@ -3,6 +3,7 @@
 #include "userinc.h"
 #define MAX_PARA_SIZE	100 
 #define MAX_SD_SIZE	50 
+#define SD_ENABLE       0
 
 #define TIME_TEST       HAL_GPIO_TogglePin(GPIOE,GPIO_PIN_10)
 #define DOWN_IN         PBin(13)
@@ -25,16 +26,10 @@ typedef struct
   int32_t run_counts;
   int32_t set_time;
   
-  int32_t test_x;
-  int32_t test_y;
-  int32_t acc_x;
-  int32_t acc_y;
-  
-  PID_PARA_STRUCT x_pid;
-  PID_PARA_STRUCT y_pid;
-  
-  PID_PARA_STRUCT x_error_pid;
-  PID_PARA_STRUCT y_error_pid;
+  int32_t test_1;
+  int32_t test_2;
+  int32_t test_3;
+  int32_t test_4;
   
 }PARA_LIST_STRUCT;
 

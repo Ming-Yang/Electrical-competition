@@ -10,11 +10,11 @@
 #define LED_SYS_RUN     PEout(6)=0
 #define LED_SYS_STOP    PEout(6)=1
 
-PARA_LIST_STRUCT setpara = {0};
+SYS_STRUCT sys;
 OLED_STRUCT oled = {0};
+PARA_LIST_STRUCT setpara;
 STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
-SYS_STRUCT sys;
 
 static void ChangePara(char event);
 static void ShowUnder();
@@ -26,34 +26,12 @@ extern void SysRun();
 int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.run_counts,
   &setpara.set_time,
-  &setpara.test_x,
-  &setpara.test_y,
-  
-  &setpara.x_pid.kp,
-  &setpara.x_pid.ki,
-  &setpara.x_pid.kd,
-  &setpara.x_pid.bound,
-  &setpara.x_pid.death,
-  
-  &setpara.y_pid.kp,
-  &setpara.y_pid.ki,
-  &setpara.y_pid.kd,
-  &setpara.y_pid.bound,
-  &setpara.y_pid.death,
-  
-  &setpara.x_error_pid.kp,
-  &setpara.x_error_pid.ki,
-  &setpara.x_error_pid.kd,
-  &setpara.x_error_pid.bound,
-  &setpara.x_error_pid.death,
-             
-  &setpara.y_error_pid.kp,
-  &setpara.y_error_pid.ki,
-  &setpara.y_error_pid.kd,
-  &setpara.y_error_pid.bound,
-  &setpara.y_error_pid.death,
-  
   &setpara.task_num,
+  
+  &setpara.test_1,
+  &setpara.test_2,
+  &setpara.test_3,
+  &setpara.test_4,
   
 //  &setpara,
   
@@ -66,25 +44,10 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.set_time,"SetTime",1},
   {&setpara.run_counts,"Counts",1},
   
-  {&setpara.test_x,"x",1},
-  {&setpara.test_y,"y",1},
-  
-  {&setpara.x_pid.kp,"x_P",1},
-  {&setpara.x_pid.ki,"x_I",1},
-  {&setpara.x_pid.kd,"x_D",1},
-             
-  {&setpara.y_pid.kp,"y_P",1},
-  {&setpara.y_pid.ki,"y_I",1},
-  {&setpara.y_pid.kd,"y_D",1},
-
-  {&setpara.x_error_pid.kp,"x_EP",1},
-  {&setpara.x_error_pid.ki,"x_EI",1},
-  {&setpara.x_error_pid.kd,"x_ED",1},
-             
-  {&setpara.y_error_pid.kp,"y_EP",1},
-  {&setpara.y_error_pid.ki,"y_EI",1},
-  {&setpara.y_error_pid.kd,"y_ED",1},
-
+  {&setpara.test_1,"T1",1},
+  {&setpara.test_2,"T2",1},
+  {&setpara.test_3,"T3",1},
+  {&setpara.test_4,"T4",1},
   
 //  {&setpara,"",1},
   
@@ -126,18 +89,10 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d,",(int)((axis_x.current_point)*100));
-  printf("%d,",(int)((int)axis_x.sum_con));
-  printf("%d,",(int)((axis_x.set_point)*100));
+  printf("%d",(int)(T));
   
-  printf("%d,",(int)((axis_x_error.current_point)*100));
-  printf("%d,",(int)((int)axis_x_error.sum_con));
-  printf("%d,",(int)((axis_x_error.set_point)*100));
-//  
-//  
-//  printf("%d,",(int)((euler2speed.prev_error - euler2speed.last_error)*100));
-//  printf("%d,",(int)(euler2speed.current_point*100));
-//  printf("%d,",(int)(euler2speed.sum_con));
+  
+  
   
   printf("\r\n");
 }
@@ -158,7 +113,7 @@ void ShowUpper(int8 page)
     oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
     oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
     oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
-    oledprintf(4,0,"AD:%5d,T:%4.1f",indata.adc10,T/1000.0f);
+    oledprintf(4,0,"T_R:%4.1f T:%4.1f",sys.T_RUN/1000.0f,T/1000.0f);
     break;
     
   case 1:
@@ -232,15 +187,12 @@ void SysRun()
     memset(&indata,0,sizeof(DATA_IN_STRUCT));
     setpara.run_counts++;
     
-    ClearPIDCach(&axis_x);
-    ClearPIDCach(&axis_y);
-    
     Para2Flash();
-    
+#if     SD_ENABLE
     sprintf(filename,"%d",setpara.run_counts);
     SDFatFSOpen(strcat(filename,".txt"));       //用到HAL_Delay() 不能关中断
     DataNameWriteFatfs();
-
+#endif
     while(T - t_last < BUFF_TIME_MS);
     LCD_CLS();
     sys.sd_write = 1;
@@ -258,10 +210,10 @@ void SysStop()
   sys.force_stop = 0;
   sys.status = READY;
   sys.sd_write = 0;
-  
-  SendParaTable(0);
-  
+#if     SD_ENABLE
+  SendParaTable(0);  
   SDFatFsClose();
+#endif
   LED_SYS_STOP;
 }
 
@@ -366,6 +318,7 @@ void CheckKey()
     {
       if(sys.status == READY)
       {
+#if     SD_ENABLE
         char filename[5] = {0};
         LCD_CLS();
         oledprintf(3,3,"Sending SD");
@@ -373,6 +326,7 @@ void CheckKey()
         sprintf(filename,"%d",setpara.run_counts);
         SDFatFSRead(strcat(filename,".txt"));
         LCD_CLS();
+#endif
       }
     }
     else

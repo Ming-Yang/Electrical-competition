@@ -14,20 +14,13 @@
 #define MAX_PWM 1000
 #define DECODER1_RAW_GRY 27.27272727273f
 #define DECODER2_RAW_GRY 0.3515625f
-#define OMEGA   4.342447f
 #define CheckData(data_in,data_th)  ((data_in) < (data_th/2.0f))?\
                                     (data_in):((data_in)-(data_th))
 #define OCS_PIN PEin(12) 
-#define SD_PIN (!PEin(11))
+#define SD_PIN (!PEin(11))                                  
                                       
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
-
-PID axis_x;
-PID axis_y;
-
-PID axis_x_error;
-PID axis_y_error;
 
 static void GetGY_25(MPU6050_EULER_STRUCT*);
 
@@ -57,23 +50,55 @@ void DataProcess()
       break;
       
     default:
-
+      outdata.step_motor1.speed = setpara.test_1;
+      outdata.step_motor2.speed = setpara.test_2;
       break;
     }
   }
   else if(sys.status == BLOCKED)
   {
-    outdata.pwm_x = outdata.pwm_y = 0;
+//    PAout(2) = outdata.step_motor1.enable = 0;
+//    PBout(0) = outdata.step_motor1.enable = 0;
+  }
+  else
+  {
+    PAout(2) = outdata.step_motor1.enable = 0;
+    PBout(0) = outdata.step_motor1.enable = 0;
   }
 }
 
 void DataOutput()
-{  
+{    
+  if(sys.status == RUNNING)
+  {
+    PAout(2) = outdata.step_motor1.enable = 1;
+    PBout(0) = outdata.step_motor1.enable = 1;
+  }
+  else
+  {
+    PAout(2) = outdata.step_motor1.enable = 0;
+    PBout(0) = outdata.step_motor1.enable = 0;
+  }
+  
+  outdata.step_motor1.frequency = abs(outdata.step_motor1.speed);
+  outdata.step_motor2.frequency = abs(outdata.step_motor2.speed);
+  
+  if(outdata.step_motor1.speed > 0)
+    outdata.step_motor1.direction = 0;
+  else
+    outdata.step_motor1.direction = 1;
+  
+  if(outdata.step_motor2.speed > 0)
+    outdata.step_motor2.direction = 0;
+  else
+    outdata.step_motor2.direction = 1;
+  
+  PAout(1) = outdata.step_motor1.direction;
+  PAout(7) = outdata.step_motor2.direction;
+  
   //开启pwm中断
   HAL_NVIC_EnableIRQ(TIM2_IRQn);
   HAL_NVIC_EnableIRQ(TIM3_IRQn);
-  //开启按键中断 
-  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
 void DataNoPut()
@@ -86,8 +111,10 @@ void DataSave()
   if(!(sys.osc_suspend || OCS_PIN))
     SendOscilloscope();
   
+#if SD_ENABLE
   if(sys.sd_write && SD_PIN)
     DataWriteFatfs();
+#endif
 }
 
 void GetGY_25(MPU6050_EULER_STRUCT *gy25)
@@ -101,3 +128,4 @@ void GetGY_25(MPU6050_EULER_STRUCT *gy25)
   gy25->roll = ((int16_t)( (uart1_rx_buff[5] << 8) | uart1_rx_buff[6] )) / 100.0f; 
   gy25->yaw = ((int16_t)( (uart1_rx_buff[1] << 8) | uart1_rx_buff[2] )) / 100.0f; 
 }
+

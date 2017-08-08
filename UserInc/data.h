@@ -33,13 +33,22 @@ typedef struct
   uint32_t channel4;
 }CHANNEL_STRUCT;
 
+typedef struct{
+  uint32_t frequency;
+  uint16_t direction;
+  int32_t speed;
+  uint32_t angle;
+  uint32_t enable;
+}STEP_MOTER_STRUCT;
+
 typedef struct 
 {
   CHANNEL_STRUCT tim2;
   CHANNEL_STRUCT tim3;
   MPU6050_EULER_STRUCT euler;
   float speed;
-  int motor_hz;
+  STEP_MOTER_STRUCT step_motor1;
+  STEP_MOTER_STRUCT step_motor2;
   int pwm_x;
   int pwm_y;
 }DATA_OUT_STRUCT;
@@ -48,10 +57,6 @@ typedef struct
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
 extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
-extern PID axis_x;
-extern PID axis_y;
-extern PID axis_x_error;
-extern PID axis_y_error;
 
 void DataInput();
 void DataSave();

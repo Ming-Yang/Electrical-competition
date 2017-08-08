@@ -30,7 +30,7 @@ void PWMStart()
 //  HAL_TIM_PWM_Start_IT(&htim2,TIM_CHANNEL_3);
 //  HAL_TIM_PWM_Start_IT(&htim2,TIM_CHANNEL_4);
   
-//  HAL_TIM_PWM_Start_IT(&htim3,TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start_IT(&htim3,TIM_CHANNEL_1);
 //  HAL_TIM_PWM_Start_IT(&htim3,TIM_CHANNEL_2);
 //  HAL_TIM_PWM_Start_IT(&htim3,TIM_CHANNEL_3);
 //  HAL_TIM_PWM_Start_IT(&htim3,TIM_CHANNEL_4);
@@ -52,6 +52,7 @@ void PWMStop()
 void UartInit()
 {
   HAL_UART_Receive_IT(&huart2, (uint8_t*)uart2_rx_buff, 1);
+  HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 1);
 }
 
 void GpioInit()
@@ -69,11 +70,11 @@ void InitAll()
   PWMStart();
   InputDecoder();
   UartInit();
-  HAL_ADC_Start(&hadc1);
   
   FlashInit();
+#if     SD_ENABLE
   SDFatFSInit();
-  
+#endif
   UIInit();
   sys.status = READY;
   printf("init finish!\r\n");

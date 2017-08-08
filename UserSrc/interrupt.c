@@ -4,7 +4,12 @@
 #include "data.h"
 #include "usmart.h"
 
+#define OV7725_W            80                                    //定义摄像头图像宽度
+#define OV7725_H            60                                    //定义摄像头图像高度
+#define CAMERA_SIZE         (OV7725_W * OV7725_H/8 )  //图像占用空间大小
+
 volatile uint32_t T;
+uint8_t imgbuff[CAMERA_SIZE];
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
@@ -37,6 +42,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }
     HAL_UART_Receive_IT(&huart2, (uint8_t*)&buff, 1);
   }
+  else if(huart->Instance == huart1.Instance)
+  {
+    HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 1);
+  }
 }
 
 
@@ -53,13 +62,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       HAL_GPIO_TogglePin(GPIOB,GPIO_PIN_9);
     }
-    
+    TIME_TEST;
     SysCheck();
     DataInput();
     DataProcess();
     DataOutput();
-
     DataSave();  
+    TIME_TEST;
   }       
 }
 
@@ -68,7 +77,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
   /* Prevent unused argument(s) compilation warning */
   UNUSED(htim);
   uint32_t pwm,hz;
-
+  
   HAL_NVIC_DisableIRQ(TIM2_IRQn);
   HAL_NVIC_DisableIRQ(TIM3_IRQn);
   
@@ -76,47 +85,51 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef *htim)
     switch(htim->Channel)
     {
     case HAL_TIM_ACTIVE_CHANNEL_1:
-      hz = (int)(1000000/outdata.motor_hz);
+      hz = (int)(1000000/outdata.step_motor1.frequency);
       hz = limit(hz, 100, 1000000);
-
+      
       htim2.Instance->CNT = 0;
       htim2.Instance->ARR = hz;
       htim2.Instance->CCR1 = (hz/2);
       break;
-    
+      
     default:break;
     }
   
   else if(htim->Instance == htim3.Instance)
     switch(htim->Channel)
     {
-    case HAL_TIM_ACTIVE_CHANNEL_1:pwm = outdata.tim3.channel1;break;
-    case HAL_TIM_ACTIVE_CHANNEL_2:pwm = outdata.tim3.channel2;break;
-    case HAL_TIM_ACTIVE_CHANNEL_3:pwm = outdata.tim3.channel3;break;
-    case HAL_TIM_ACTIVE_CHANNEL_4:pwm = outdata.tim3.channel4;break;
+    case HAL_TIM_ACTIVE_CHANNEL_1:
+      hz = (int)(1000000/outdata.step_motor2.frequency);
+      hz = limit(hz, 100, 1000000);
+
+      htim3.Instance->CNT = 0;
+      htim3.Instance->ARR = hz;
+      htim3.Instance->CCR1 = (hz/2);
+    break;
+
     default:break;
     }
-
+  
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   /* Prevent unused argument(s) compilation warning */
   UNUSED(GPIO_Pin);
-  HAL_NVIC_DisableIRQ(EXTI15_10_IRQn);
   switch(GPIO_Pin)
   {
   case GPIO_PIN_10:button = PUSH;
-    break;
+  break;
   case GPIO_PIN_11:button = UP;
-    break;
+  break;
   case GPIO_PIN_12:
     if(!PRESS_IN)
       button = PRESS;
     break;
   case GPIO_PIN_13:button = DOWN;
-    break;
-
+  break;
+  
   case GPIO_PIN_15:
     if(DIRECTION_IN)
       button = CCW;
@@ -126,4 +139,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     
   default:break;
   }
+}
+
+
+void CameraShow()
+{
+
+
 }
