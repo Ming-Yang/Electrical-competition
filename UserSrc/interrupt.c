@@ -44,7 +44,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   }
   else if(huart->Instance == huart1.Instance)
   {
-    HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 1);
+    indata.ball_position.x = ((uart1_rx_buff[0]) | (uart1_rx_buff[1] << 8))/100.0;
+    indata.ball_position.y = ((uart1_rx_buff[2]) | (uart1_rx_buff[3] << 8))/100.0;
   }
 }
 

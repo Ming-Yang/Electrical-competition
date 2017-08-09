@@ -61,13 +61,13 @@ void DataNameWriteFatfs()
 {
   F_PRINTF_S(sys.T_RUN);
            
-  F_PRINTF_S(outdata.gy25_euler.pitch);
-  F_PRINTF_S(outdata.gy25_euler.roll);
-  F_PRINTF_S(outdata.gy25_euler.yaw);
-  
-  F_PRINTF_S(outdata.pwm);
-  F_PRINTF_S(outdata.speed);
-  F_PRINTF_S(indata.decoder1.angle_v);
+//  F_PRINTF_S(outdata.gy25_euler.pitch);
+//  F_PRINTF_S(outdata.gy25_euler.roll);
+//  F_PRINTF_S(outdata.gy25_euler.yaw);
+//  
+//  F_PRINTF_S(outdata.pwm);
+//  F_PRINTF_S(outdata.speed);
+//  F_PRINTF_S(indata.decoder1.angle_v);
   
   f_printf(&fil,"\r\n");
 }
@@ -76,13 +76,13 @@ void DataWriteFatfs()
 {
   F_PRINTF_D(sys.T_RUN);
   
-  F_PRINTF_D((int)(100*indata.gy25_euler.pitch));
-  F_PRINTF_D((int)(100*indata.gy25_euler.roll));
-  F_PRINTF_D((int)(100*indata.gy25_euler.yaw));
+//  F_PRINTF_D((int)(100*indata.gy25_euler.pitch));
+//  F_PRINTF_D((int)(100*indata.gy25_euler.roll));
+//  F_PRINTF_D((int)(100*indata.gy25_euler.yaw));
   
 //  F_PRINTF_D(outdata.pwm);
-  F_PRINTF_D((int)(100*outdata.speed));
-  F_PRINTF_D((int)(100*indata.decoder1.ang_v));
+//  F_PRINTF_D((int)(100*outdata.speed));
+//  F_PRINTF_D((int)(100*indata.decoder1.ang_v));
   
   f_printf(&fil,"\r\n");
 }
@@ -109,17 +109,17 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"G:%4.2fE:%4.2f",indata.global_euler.roll,indata.gy25_euler.roll);
-    oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
-    oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
-    oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
+    oledprintf(0,0,"X:%4.2f Y:%4.2f",indata.ball_position.x,indata.ball_position.y);
+//    oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
+//    oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
+//    oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
     oledprintf(4,0,"T_R:%4.1f T:%4.1f",sys.T_RUN/1000.0f,T/1000.0f);
     break;
     
   case 1:
-    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
-    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
-    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
+//    oledprintf(0,0,"A X%4d,Y%4d,Z%4d",indata.mpu6050.acc_x>>8,indata.mpu6050.acc_y>>8,indata.mpu6050.acc_z>>8);
+//    oledprintf(1,0,"G X%4d,Y%4d,Z%4d",indata.mpu6050.gyr_x>>8,indata.mpu6050.gyr_y>>8,indata.mpu6050.gyr_z>>8);
+//    oledprintf(2,0,"E R%4d,P%4d,Y%4d",(int)outdata.euler.roll,(int)outdata.euler.pitch,(int)outdata.euler.yaw);
 //    oledprintf(0,0,"",);
 //    oledprintf(1,0,"",);
 //    oledprintf(2,0,"",);
