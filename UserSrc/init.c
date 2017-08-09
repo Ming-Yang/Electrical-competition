@@ -68,7 +68,7 @@ void InitAll()
   __disable_irq();
   TimInit();
   PWMStart();
-  InputDecoder();
+//  InputDecoder();
   UartInit();
   
   FlashInit();
