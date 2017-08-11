@@ -53,74 +53,33 @@ void DataProcess()
 {  
   if(sys.status == BLOCKED)
   {
-//    outdata.step_motor1.set_lenth_mm = outdata.step_motor2.set_lenth_mm = 0;
+    //    outdata.step_motor1.set_lenth_mm = outdata.step_motor2.set_lenth_mm = 0;
   }
   
   else if(sys.status == RUNNING)
   { 
-    //计算当前距离
-      if(outdata.step_motor1.direction == 0)
-        outdata.step_motor1.lenth_mm += (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
-      else
-        outdata.step_motor1.lenth_mm -= (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
-      if(outdata.step_motor2.direction == 0)
-        outdata.step_motor2.lenth_mm += (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
-      else
-        outdata.step_motor2.lenth_mm -= (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
-    
     switch(setpara.task_num)
     {
     case 1:
-      setpara.pid_x.bound = setpara.pid_y.bound = MAX_STEP_FREQUENCY;
-        setpara.pid_x.death = setpara.pid_y.death = 0;
-        
-        setpara.pid_y = setpara.pid_x;
-        
-        GetPIDPara(&pid_x,&setpara.pid_x);
-        GetPIDPara(&pid_y,&setpara.pid_y);
-        
-        pid_x.current_point = indata.ball_position.x;
-        pid_y.current_point = indata.ball_position.y;
-        pid_x.set_point = setpara.test_3;
-        pid_y.set_point = setpara.test_4;
-        
-        IncPIDCalc(&pid_x);
-        IncPIDCalc(&pid_y);
-        
-        outdata.step_motor2.speed = (int)pid_x.sum_con;
-        outdata.step_motor1.speed = (int)pid_y.sum_con;
-        
-        outdata.step_motor1.speed = limit(outdata.step_motor1.speed, -MAX_STEP_FREQUENCY, MAX_STEP_FREQUENCY);
-        outdata.step_motor2.speed = limit(outdata.step_motor2.speed, -MAX_STEP_FREQUENCY, MAX_STEP_FREQUENCY);
+//      if(outdata.step_motor1.speed > 0)
+//        outdata.step_motor1.direction = 0;
+//      else
+//        outdata.step_motor1.direction = 1;
+//      
+//      if(outdata.step_motor2.speed > 0)
+//        outdata.step_motor2.direction = 0;
+//      else
+//        outdata.step_motor2.direction = 1;
+//      
+//      outdata.step_motor1.frequency = abs(outdata.step_motor1.speed);
+//      outdata.step_motor2.frequency = abs(outdata.step_motor2.speed);
       
-        if(fabs(outdata.step_motor1.lenth_mm) > 40)
-          outdata.step_motor1.speed = 0;
-        if(fabs(outdata.step_motor2.lenth_mm) > 40)
-          outdata.step_motor2.speed = 0;
-      
-      
-      
-      if(outdata.step_motor1.speed > 0)
-        outdata.step_motor1.direction = 0;
-      else
-        outdata.step_motor1.direction = 1;
-      
-      if(outdata.step_motor2.speed > 0)
-        outdata.step_motor2.direction = 0;
-      else
-        outdata.step_motor2.direction = 1;
-      
-      outdata.step_motor1.frequency = abs(outdata.step_motor1.speed);
-      outdata.step_motor2.frequency = abs(outdata.step_motor2.speed);
-      
-//      outdata.step_motor1.set_lenth_mm = setpara.test_1/10.0;
-//      outdata.step_motor2.set_lenth_mm = setpara.test_2/10.0;
+      outdata.step_motor1.set_lenth_mm = setpara.test_1/10.0;
+      outdata.step_motor2.set_lenth_mm = setpara.test_2/10.0;
       
       break;
     case 2:
-      
-      {
-        
+      {    
         setpara.pid_x.bound = setpara.pid_y.bound = MAX_STEP_MM;
         setpara.pid_x.death = setpara.pid_y.death = 0;
         
@@ -140,85 +99,91 @@ void DataProcess()
         outdata.step_motor2.set_lenth_mm = -pid_x.sum_con;
         outdata.step_motor1.set_lenth_mm = -pid_y.sum_con;
         
-        outdata.step_motor2.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
-        outdata.step_motor2.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);;
+//        outdata.step_motor1.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
+//        outdata.step_motor2.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
         
         outdata.step_motor1.set_lenth_mm = limit(outdata.step_motor1.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
         outdata.step_motor2.set_lenth_mm = limit(outdata.step_motor2.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
       }
-      
-      
       break;
       
     default:
-
+      
       break;
     }
     
+    //计算当前距离
+    if(outdata.step_motor1.direction == 0)
+      outdata.step_motor1.lenth_mm += (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+    else
+      outdata.step_motor1.lenth_mm -= (outdata.step_motor1.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+    if(outdata.step_motor2.direction == 0)
+      outdata.step_motor2.lenth_mm += (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
+    else
+      outdata.step_motor2.lenth_mm -= (outdata.step_motor2.frequency*T_PERIOD_MS*MM_PER_PULSE/1000);
     
+    //控制到设定距离
+    outdata.step_motor1.diff_lenth_mm = outdata.step_motor1.set_lenth_mm - outdata.step_motor1.lenth_mm;
+    outdata.step_motor2.diff_lenth_mm = outdata.step_motor2.set_lenth_mm - outdata.step_motor2.lenth_mm;
+    
+    if(fabs(outdata.step_motor1.diff_lenth_mm) < 0.2)
+    {
+      outdata.step_motor1.frequency = 0;
+    }
+    else
+    {
+      if(outdata.step_motor1.diff_lenth_mm > 0.2)
+      {
+        outdata.step_motor1.direction = 0;
+      }
+      else if(outdata.step_motor1.diff_lenth_mm < -0.2)
+      {
+        outdata.step_motor1.direction = 1;
+      }
       
-//      //控制到设定距离
-//      outdata.step_motor1.diff_lenth_mm = outdata.step_motor1.set_lenth_mm - outdata.step_motor1.lenth_mm;
-//      outdata.step_motor2.diff_lenth_mm = outdata.step_motor2.set_lenth_mm - outdata.step_motor2.lenth_mm;
-//      
-//      if(fabs(outdata.step_motor1.diff_lenth_mm) < 0.2)
-//      {
-//        outdata.step_motor1.frequency = 0;
-//      }
-//      else
-//      {
-//        if(outdata.step_motor1.diff_lenth_mm > 0.2)
-//        {
-//          outdata.step_motor1.direction = 0;
-//        }
-//        else if(outdata.step_motor1.diff_lenth_mm < -0.2)
-//        {
-//          outdata.step_motor1.direction = 1;
-//        }
-//        
-//        switch(outdata.step_motor1.frequency)
-//        {
-//        case 0:outdata.step_motor1.frequency = MIN_STEP_FREQUENCY;break;
-//        case MIN_STEP_FREQUENCY: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/5;break;
-//        case MAX_STEP_FREQUENCY/5: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/4;break;
-//        case MAX_STEP_FREQUENCY/4: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/2;break;
-//        case MAX_STEP_FREQUENCY/2: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY;break;
-//        default: break;
-//        }
-//        
-//        if((outdata.step_motor1.pre_direction + outdata.step_motor1.direction) == 1)
-//          outdata.step_motor1.frequency = 0;
-//      }
-//      
-//      if(fabs(outdata.step_motor2.diff_lenth_mm) < 0.2)
-//      {
-//        outdata.step_motor2.frequency = 0;
-//      }
-//      else
-//      {
-//        if(outdata.step_motor2.diff_lenth_mm > 0.2)
-//        {
-//          outdata.step_motor2.direction = 0;
-//        }
-//        else if(outdata.step_motor2.diff_lenth_mm < -0.2)
-//        {
-//          outdata.step_motor2.direction = 1;
-//        }
-//        switch(outdata.step_motor2.frequency)
-//        {
-//        case 0:outdata.step_motor2.frequency = MIN_STEP_FREQUENCY;break;
-//        case MIN_STEP_FREQUENCY: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/5;break;
-//        case MAX_STEP_FREQUENCY/5: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/4;break;
-//        case MAX_STEP_FREQUENCY/4: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/2;break;
-//        case MAX_STEP_FREQUENCY/2: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY;break;
-//        default: break;
-//        }
-//        if((outdata.step_motor2.pre_direction + outdata.step_motor2.direction) == 1)
-//          outdata.step_motor2.frequency = 0;
-//      }
-//      
-//      outdata.step_motor1.pre_direction = outdata.step_motor1.direction;
-//      outdata.step_motor2.pre_direction = outdata.step_motor2.direction;
+      switch(outdata.step_motor1.frequency)
+      {
+      case 0:outdata.step_motor1.frequency = MIN_STEP_FREQUENCY;break;
+      case MIN_STEP_FREQUENCY: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/5;break;
+      case MAX_STEP_FREQUENCY/5: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/4;break;
+      case MAX_STEP_FREQUENCY/4: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY/2;break;
+      case MAX_STEP_FREQUENCY/2: outdata.step_motor1.frequency = MAX_STEP_FREQUENCY;break;
+      default: break;
+      }
+      
+      if((outdata.step_motor1.pre_direction + outdata.step_motor1.direction) == 1)
+        outdata.step_motor1.frequency = 0;
+    }
+    
+    if(fabs(outdata.step_motor2.diff_lenth_mm) < 0.2)
+    {
+      outdata.step_motor2.frequency = 0;
+    }
+    else
+    {
+      if(outdata.step_motor2.diff_lenth_mm > 0.2)
+      {
+        outdata.step_motor2.direction = 0;
+      }
+      else if(outdata.step_motor2.diff_lenth_mm < -0.2)
+      {
+        outdata.step_motor2.direction = 1;
+      }
+      switch(outdata.step_motor2.frequency)
+      {
+      case 0:outdata.step_motor2.frequency = MIN_STEP_FREQUENCY;break;
+      case MIN_STEP_FREQUENCY: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/5;break;
+      case MAX_STEP_FREQUENCY/5: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/4;break;
+      case MAX_STEP_FREQUENCY/4: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY/2;break;
+      case MAX_STEP_FREQUENCY/2: outdata.step_motor2.frequency = MAX_STEP_FREQUENCY;break;
+      default: break;
+      }
+      if((outdata.step_motor2.pre_direction + outdata.step_motor2.direction) == 1)
+        outdata.step_motor2.frequency = 0;
+    }
+    
+    outdata.step_motor1.pre_direction = outdata.step_motor1.direction;
+    outdata.step_motor2.pre_direction = outdata.step_motor2.direction;
   }
   
 }
