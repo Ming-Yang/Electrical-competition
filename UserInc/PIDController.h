@@ -22,10 +22,13 @@ typedef struct PIDs
         float lower_bound;
 }PID;
 #define PIDLowPassFilter 0
-#define PIDBound 0
+#define PIDBound 1
 #define PIDDeadZone 1
 
 void IncPIDCalc(PID * pid_ptr);
 void GetPIDPara(PID * pid, PID_PARA_STRUCT *para);
 void ClearPIDCach(PID *pid);
+
+extern PID pid_x;
+extern PID pid_y;
 #endif /*__PIDBASIC_H*/

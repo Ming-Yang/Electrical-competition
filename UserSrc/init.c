@@ -6,7 +6,6 @@
 #include "oled.h"
 #include "SDFatfs.h"
 #include "OLEDUI.h"
-#include "adc.h"
 
 void TimInit()
 {

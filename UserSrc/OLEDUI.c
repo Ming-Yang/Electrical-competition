@@ -16,10 +16,13 @@ PARA_LIST_STRUCT setpara;
 STATUS_BUTTON_STRUCT button;
 SYS_STATUS_STRUCT sys_status;
 
+uint8_t frame[60][80];
+
 static void ChangePara(char event);
 static void ShowUnder();
 static void SysStop();
 static void SendParaTable(uint8_t mode);
+static void ShowFrame(uint8_t xPos,uint8_t yPos);
 extern void SysRun();
 
 //parameters to be saved in flash should be listed here in order
@@ -32,6 +35,18 @@ int32_t* para_table[MAX_PARA_SIZE]={
   &setpara.test_2,
   &setpara.test_3,
   &setpara.test_4,
+  
+  &setpara.pid_x.bound,
+  &setpara.pid_x.death,
+  &setpara.pid_x.kd,
+  &setpara.pid_x.ki,
+  &setpara.pid_x.kp,
+  
+  &setpara.pid_y.bound,
+  &setpara.pid_y.death,
+  &setpara.pid_y.kd,
+  &setpara.pid_y.ki,
+  &setpara.pid_y.kp,
   
 //  &setpara,
   
@@ -48,6 +63,14 @@ PARA_SHOW_STRUCT para_show_table[MAX_PARA_SIZE]=
   {&setpara.test_2,"T2",1},
   {&setpara.test_3,"T3",1},
   {&setpara.test_4,"T4",1},
+  
+  {&setpara.pid_x.kp,"X_P",1},
+  {&setpara.pid_x.ki,"X_I",1},
+  {&setpara.pid_x.kd,"X_D",1},
+  
+  {&setpara.pid_y.kp,"Y_P",1},
+  {&setpara.pid_y.ki,"Y_I",1},
+  {&setpara.pid_y.kd,"Y_D",1},
   
 //  {&setpara,"",1},
   
@@ -89,10 +112,15 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-  printf("%d",(int)(T));
-  
-  
-  
+//  printf("%d, ",((int)(indata.ball_position.x*10)));
+//  printf("%d, ",((int)(indata.ball_position.y*10)));
+  printf("%d, ",((int)(pid_x.current_point*10)));
+  printf("%d, ",((int)(pid_x.set_point*10)));
+  printf("%d, ",((int)(pid_x.sum_con*10)));
+
+  printf("%d, ",((int)(pid_y.current_point*10)));
+  printf("%d, ",((int)(pid_y.set_point*10)));
+  printf("%d, ",((int)(pid_y.sum_con*10)));
   
   printf("\r\n");
 }
@@ -188,6 +216,9 @@ void SysRun()
     memset(&outdata,0,sizeof(DATA_OUT_STRUCT));
     setpara.run_counts++;
     
+    ClearPIDCach(&pid_x);
+    ClearPIDCach(&pid_y);
+    
     Para2Flash();
 #if     SD_ENABLE
     sprintf(filename,"%d",setpara.run_counts);
@@ -239,7 +270,7 @@ void CheckKey()
     {
       oled.changepara ^= 1;  
     }
-    else if(T-pushtime<2000)
+    else if(T-pushtime<1000)
     {
       SysRun();
     }
@@ -421,7 +452,9 @@ void OledShow()
     }
     if(oled.showpage == -1)
     {
-      
+      ShowFrame(((uint8_t)(indata.ball_position.x/2)),((uint8_t)(indata.ball_position.y/2)));
+      oledprintf(0,83,"x:%.1f",indata.ball_position.x);
+      oledprintf(1,83,"y:%.1f",indata.ball_position.y);
     } 
     if(oled.showpage == -2)
     { 
@@ -530,4 +563,38 @@ void UIInit()
   oled.precision = 1;
   oled.showpage_max = 3;
   oled.showpage_min = -2;
+}
+
+void ShowFrame(uint8_t xPos,uint8_t yPos)
+{
+  for(int y=0;y<60;y++)
+  {
+    for(int x=0;x<80;x++)
+    {
+      frame[y][x]=1;
+      frame[y][0] = 0;
+      frame[y][79] = 0;
+      frame[0][x] = 0;
+      frame[59][x] = 0;
+    }
+  }
+  frame[xPos][yPos]=0;
+  uint8_t oled[1024];
+  for(int y=0;y<8;y++)
+    for(int x=0;x<128;x++)
+    {
+      oled[128*y+x]=0;
+      for(int i=0;i<8;i++)
+      {
+        oled[128*y+x]>>=1;
+        if(frame[y*8+i][x]==0x00) 
+        {
+          if(x<80 && y*8+i<60)
+          {
+            oled[128*y+x]+=0x80;
+          }
+        }
+      }
+    }
+  full_bmp(oled);
 }

@@ -31,6 +31,10 @@ typedef struct
   int32_t test_3;
   int32_t test_4;
   
+  PID_PARA_STRUCT pid_x;
+  PID_PARA_STRUCT pid_y;
+//  AXIS_STRUCT correct_axis;
+  
 }PARA_LIST_STRUCT;
 
 typedef enum 

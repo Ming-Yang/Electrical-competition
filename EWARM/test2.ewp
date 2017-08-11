@@ -323,7 +323,7 @@
           <state>$PROJ_DIR$\..\Hardware</state>
           <state>$PROJ_DIR$/../Middlewares/Third_Party/FatFs/src/drivers</state>
           <state>$PROJ_DIR$/../Middlewares/Third_Party/FatFs/src</state>
-        <state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /></option>
+        <state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /><state /></option>
         <option>
           <name>CCStdIncCheck</name>
           <state>0</state>
@@ -979,15 +979,11 @@
     </group>
     <group>
       <name>User</name>
-      <file>
-        <name>$PROJ_DIR$\..\Src\adc.c</name>
-      </file>
+      
       <file>
         <name>$PROJ_DIR$\..\Src\bsp_driver_sd.c</name>
       </file>
-      <file>
-        <name>$PROJ_DIR$\..\Src\dac.c</name>
-      </file>
+      
       <file>
         <name>$PROJ_DIR$\..\Src\fatfs.c</name>
       </file>
@@ -1000,9 +996,7 @@
       <file>
         <name>$PROJ_DIR$\..\Src\sdio.c</name>
       </file>
-      <file>
-        <name>$PROJ_DIR$\..\Src\spi.c</name>
-      </file>
+      
       <file>
         <name>$PROJ_DIR$\..\Src\stm32f4xx_hal_msp.c</name>
       </file>
@@ -1030,21 +1024,13 @@
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal.c</name>
       </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_adc_ex.c</name>
-      </file>
+      
+      
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_cortex.c</name>
       </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac.c</name>
-      </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dac_ex.c</name>
-      </file>
+      
+      
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_dma.c</name>
       </file>
@@ -1078,9 +1064,7 @@
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_sd.c</name>
       </file>
-      <file>
-        <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_spi.c</name>
-      </file>
+      
       <file>
         <name>$PROJ_DIR$\..\Drivers\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_tim.c</name>
       </file>

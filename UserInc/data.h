@@ -42,9 +42,11 @@ typedef struct
 
 typedef struct{
   uint32_t frequency;
-  uint16_t direction;
+  uint8_t direction;
+  uint8_t pre_direction;
   float lenth_mm;
   float set_lenth_mm;
+  float diff_lenth_mm;
   int32_t speed;
   uint32_t angle;
   uint32_t enable;
@@ -60,10 +62,20 @@ typedef struct
   STEP_MOTER_STRUCT step_motor2;
 }DATA_OUT_STRUCT;
 
+typedef struct
+{
+  POINT_STRUCT center;
+  POINT_STRUCT corner[4];
+  POINT_STRUCT dot[10];//0,1~9
+  POINT_STRUCT sub_dot[5];
+  POINT_STRUCT transfer;
+}AXIS_STRUCT;
 
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
 extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
+extern AXIS_STRUCT camera_axis;
+extern AXIS_STRUCT board_axis;
 
 void DataInput();
 void DataSave();
