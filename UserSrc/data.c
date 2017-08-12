@@ -23,7 +23,7 @@
 #define MM_PER_PULSE    0.005*MM_1204/STEP_DIV
 #define MIN_STEP_FREQUENCY      800
 #define MAX_STEP_FREQUENCY      9600  
-#define MAX_STEP_MM     30
+#define MAX_STEP_MM     25
 
 DATA_IN_STRUCT indata;
 DATA_OUT_STRUCT outdata;
