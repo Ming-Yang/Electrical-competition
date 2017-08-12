@@ -47,6 +47,11 @@ void DataInput()
   
   //获得摄像头数据
   HAL_UART_Receive_IT(&huart1, (uint8_t*)uart1_rx_buff, 4);
+  indata.speed = sqrt(pow((indata.last_position.y - indata.ball_position.y),2)+pow((indata.last_position.x - indata.ball_position.x),2));
+//  if(indata.speed > 2)
+//    indata.ball_position = indata.last_position;
+  
+  indata.last_position = indata.ball_position;
 }
 
 void DataProcess()
@@ -58,6 +63,14 @@ void DataProcess()
   
   else if(sys.status == RUNNING)
   { 
+    setpara.pid_x.bound = setpara.pid_y.bound = MAX_STEP_MM;
+    setpara.pid_x.death = setpara.pid_y.death = 0;
+    
+    setpara.pid_y = setpara.pid_x;
+    
+    GetPIDPara(&pid_x,&setpara.pid_x);
+    GetPIDPara(&pid_y,&setpara.pid_y);
+    
     switch(setpara.task_num)
     {
     case 1:
@@ -78,47 +91,36 @@ void DataProcess()
       outdata.step_motor2.set_lenth_mm = setpara.test_2/10.0;
       
       break;
-    case 2:
-      {    
+    case 2:      
+//      if((sys.T_RUN%(setpara.test_1+setpara.test_2) < setpara.test_1) || indata.speed > 0.2)
+      {
+        pid_x.current_point = indata.ball_position.x;
+        pid_x.set_point = setpara.test_3;
+        IncPIDCalc(&pid_x);
+        outdata.step_motor2.set_lenth_mm = -pid_x.sum_con;
         
-        if(sys.T_RUN < setpara.test_1)
-        {
-          outdata.step_motor1.set_lenth_mm = (indata.ball_position.y - setpara.test_4)*1000;
-          outdata.step_motor2.set_lenth_mm = (indata.ball_position.x - setpara.test_3)*1000;
-        }
-        else if(sys.T_RUN < setpara.test_2)
-        {
-          outdata.step_motor1.set_lenth_mm = 0;
-          outdata.step_motor2.set_lenth_mm = 0;
-        }        
-        else
-        {
-          setpara.pid_x.bound = setpara.pid_y.bound = MAX_STEP_MM;
-          setpara.pid_x.death = setpara.pid_y.death = 0;
-          
-          setpara.pid_y = setpara.pid_x;
-          
-          GetPIDPara(&pid_x,&setpara.pid_x);
-          GetPIDPara(&pid_y,&setpara.pid_y);
-          
-          pid_x.current_point = indata.ball_position.x;
-          pid_y.current_point = indata.ball_position.y;
-          pid_x.set_point = setpara.test_3;
-          pid_y.set_point = setpara.test_4;
-          
-          IncPIDCalc(&pid_x);
-          IncPIDCalc(&pid_y);
-          
-          outdata.step_motor2.set_lenth_mm = -pid_x.sum_con;
-          outdata.step_motor1.set_lenth_mm = -pid_y.sum_con;
-          
-          //        outdata.step_motor1.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
-          //        outdata.step_motor2.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
-          
-          outdata.step_motor1.set_lenth_mm = limit(outdata.step_motor1.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
-          outdata.step_motor2.set_lenth_mm = limit(outdata.step_motor2.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
-        }
+        pid_y.current_point = indata.ball_position.y;
+        pid_y.set_point = setpara.test_4;
+        IncPIDCalc(&pid_y);
+        outdata.step_motor1.set_lenth_mm = -pid_y.sum_con;
       }
+//      else
+//      {
+//        outdata.step_motor1.set_lenth_mm = 0;
+//        outdata.step_motor2.set_lenth_mm = 0;
+//      }
+      
+      
+      
+      //        outdata.step_motor1.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
+      //        outdata.step_motor2.set_lenth_mm += sin(setpara.test_1*sys.T_RUN/1000);
+      
+      outdata.step_motor1.set_lenth_mm = limit(outdata.step_motor1.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
+      outdata.step_motor2.set_lenth_mm = limit(outdata.step_motor2.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
+      
+      
+      
+      
       break;
       
     default:

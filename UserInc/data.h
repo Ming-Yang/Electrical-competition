@@ -29,7 +29,8 @@ typedef struct
 //  DECODER_STRUCT decoder1;
 //  DECODER_STRUCT decoder2;
   POINT_STRUCT ball_position;
-  
+  POINT_STRUCT last_position;
+  float speed;
 }DATA_IN_STRUCT;
 
 typedef struct 

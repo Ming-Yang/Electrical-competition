@@ -122,6 +122,9 @@ void SendOscilloscope()
   printf("%d, ",((int)(pid_y.set_point*10)));
   printf("%d, ",((int)(pid_y.sum_con*10)));
   
+  printf("%d, ",((int)(indata.speed*10000)));
+  
+  
   printf("\r\n");
 }
 
@@ -137,11 +140,11 @@ void ShowUpper(int8 page)
   switch(page)
   {
   case 0:       
-    oledprintf(0,0,"X:%4.2f Y:%4.2f",indata.ball_position.x,indata.ball_position.y);
-//    oledprintf(1,0,"G %4.2fE %4.2f",indata.global_euler.pitch,indata.gy25_euler.pitch);
+    oledprintf(0,0,"X:%.1f Y:%.1f",indata.ball_position.x,indata.ball_position.y);
+    oledprintf(1,0,"Speed:%.1f",indata.speed);
 //    oledprintf(2,0,"G %4.2fE %4.2f",indata.global_euler.yaw,indata.gy25_euler.yaw);
 //    oledprintf(3,0,"x:%6d,y:%6d",outdata.pwm_x,outdata.pwm_y);
-    oledprintf(4,0,"T_R:%4.1f T:%4.1f",sys.T_RUN/1000.0f,T/1000.0f);
+    oledprintf(4,0,"T_R:%.1f T:%.1f",sys.T_RUN/1000.0f,T/1000.0f);
     break;
     
   case 1:
@@ -455,6 +458,7 @@ void OledShow()
       ShowFrame(((uint8_t)(indata.ball_position.x/2)),((uint8_t)(indata.ball_position.y/2)));
       oledprintf(0,83,"x:%.1f",indata.ball_position.x);
       oledprintf(1,83,"y:%.1f",indata.ball_position.y);
+      oledprintf(2,83,"V:%.2f",indata.speed);
     } 
     if(oled.showpage == -2)
     { 

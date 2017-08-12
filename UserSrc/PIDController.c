@@ -6,8 +6,8 @@ PID pid_y;
 
 void IncPIDCalc(PID * pid_ptr)
 {
-        float proportion  = (float)pid_ptr->proportion  /1000.0;
-        float integral    = (float)pid_ptr->integral    /1000.0;
+        float proportion  = (float)pid_ptr->proportion  /10000.0;
+        float integral    = (float)pid_ptr->integral    /100000.0;
         float differential= (float)pid_ptr->differential/10000.0;
         //当前误差
 #if   PIDLowPassFilter
