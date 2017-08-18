@@ -112,10 +112,11 @@ void DataWriteFatfs()
 //data to be sent through uart oscilloscope should be listed here in order
 void SendOscilloscope()
 {
-//  printf("%d, ",((int)(indata.ball_position.x*10)));
+  printf("%d, ",((int)(indata.ball_position.x*10)));
 //  printf("%d, ",((int)(indata.ball_position.y*10)));
-  printf("%d, ",((int)(pid_x.current_point*10)));
-  printf("%d, ",((int)(outdata.step_motor2.lenth_mm*10)));
+//  printf("%d, ",((int)(pid_x.current_point*10)));
+  printf("%d, ",((int)(kfx.x_now*10)));  
+//  printf("%d, ",-((int)(outdata.step_motor1.frequency*10)));
   printf("%d, ",((int)(pid_x.sum_con*10)));
 
   printf("%d, ",((int)(pid_y.current_point*10)));

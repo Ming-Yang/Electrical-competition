@@ -72,11 +72,27 @@ typedef struct
   POINT_STRUCT transfer;
 }AXIS_STRUCT;
 
+typedef struct KALMAN_FILTERs
+{
+        float x_last;
+        float p_last;
+        float Q;
+        float R;
+        float kg;
+        float x_mid;
+        float x_now;
+        float p_mid;
+        float p_now;
+        float resrc_data;
+}KALMAN_FILTER;
+
 extern DATA_IN_STRUCT indata;
 extern DATA_OUT_STRUCT outdata;
 extern MPU6050_PHYSICAL_STRUCT mpu6050_offset;
 extern AXIS_STRUCT camera_axis;
 extern AXIS_STRUCT board_axis;
+extern KALMAN_FILTER kfx;
+extern KALMAN_FILTER kfy;
 
 void DataInput();
 void DataSave();

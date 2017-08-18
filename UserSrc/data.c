@@ -54,6 +54,19 @@ void DataInput()
   indata.last_position = indata.ball_position;
 }
 
+
+KALMAN_FILTER kfx, kfy;
+void KalmanFilter(KALMAN_FILTER* kf)
+{
+        kf->x_mid = kf->x_last; //x_last=x(k-1|k-1),x_mid=x(k|k-1)
+        kf->p_mid = kf->p_last + kf->Q; //p_mid=p(k|k-1),p_last=p(k-1|k-1),Q=噪声
+        kf->kg = kf->p_mid / (kf->p_mid + kf->R); //为kalman filter，R为噪声
+        kf->x_now = kf->x_mid + kf->kg*(kf->resrc_data - kf->x_mid);//估计出的最优值
+        kf->p_now = (1 - kf->kg)*kf->p_mid;//最优值对应的协方差
+        kf->p_last = kf->p_now;   //更新covariance值
+        kf->x_last = kf->x_now;   //更新系统状态值
+}
+
 void DataProcess()
 {  
   if(sys.status == BLOCKED)
@@ -92,23 +105,34 @@ void DataProcess()
       
       break;
     case 2:      
-//      if((sys.T_RUN%(setpara.test_1+setpara.test_2) < setpara.test_1) || indata.speed > 0.2)
+      if((sys.T_RUN%(setpara.test_1+setpara.test_2) < setpara.test_1) || indata.speed > 0.2)
       {
-        pid_x.current_point = indata.ball_position.x;
+        kfx.Q = 0.23;
+        kfx.R = 50;
+        kfx.resrc_data = indata.ball_position.x;
+        kfy.Q = 0.23;
+        kfy.R = 50;
+        kfy.resrc_data = indata.ball_position.y;
+        KalmanFilter(&kfx);
+        KalmanFilter(&kfy);
+        
+        
+        kfy.resrc_data = indata.ball_position.x;
+        pid_x.current_point = kfx.x_now;
         pid_x.set_point = setpara.test_3;
         IncPIDCalc(&pid_x);
         outdata.step_motor2.set_lenth_mm = -pid_x.sum_con;
         
-        pid_y.current_point = indata.ball_position.y;
+        pid_y.current_point = kfy.x_now;
         pid_y.set_point = setpara.test_4;
         IncPIDCalc(&pid_y);
         outdata.step_motor1.set_lenth_mm = -pid_y.sum_con;
       }
-//      else
-//      {
-//        outdata.step_motor1.set_lenth_mm = 0;
-//        outdata.step_motor2.set_lenth_mm = 0;
-//      }
+      else
+      {
+        outdata.step_motor1.set_lenth_mm = 0;
+        outdata.step_motor2.set_lenth_mm = 0;
+      }
       
       
       
@@ -117,9 +141,6 @@ void DataProcess()
       
       outdata.step_motor1.set_lenth_mm = limit(outdata.step_motor1.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
       outdata.step_motor2.set_lenth_mm = limit(outdata.step_motor2.set_lenth_mm, -MAX_STEP_MM, MAX_STEP_MM);
-      
-      
-      
       
       break;
       
@@ -240,6 +261,14 @@ void DataSave()
     DataWriteFatfs();
 #endif
 }
+
+/*
+        Q:过程噪声，Q增大，动态响应变快，收敛稳定性变坏
+        R:测量噪声，R增大，动态响应变慢，收敛稳定性变好
+*/
+
+
+
 //
 //void GetGY_25(MPU6050_EULER_STRUCT *gy25)
 //{
